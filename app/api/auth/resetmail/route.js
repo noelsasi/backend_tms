@@ -90,23 +90,15 @@ import prisma from "../../../lib/db";
 import { NextResponse } from "next/server";
 
 // Create a Nodemailer transporter using the correct SMTP settings
-// const transporter = nodemailer.createTransport({
-//   host: process.env.SMTP_HOST, // SMTP host, e.g. 'smtp.mailtrap.io' or your SMTP server
-//   port: parseInt(process.env.SMTP_PORT), // SMTP port, e.g. 587 or 465 for secure connection
-//   secure: process.env.SMTP_SECURE === "true", // True for SSL/TLS, False for non-secure connection
-//   auth: {
-//     user: process.env.SMTP_USER, // SMTP username
-//     pass: process.env.SMTP_PASS, // SMTP password
-//   },
-// });
 const transporter = nodemailer.createTransport({
-    host: "sandbox.smtp.mailtrap.io",
-    port: 2525,
-    auth: {
-      user: "d8431809ed05a3",
-      pass: "9c65c422366752"
-    }
-  });
+  host: process.env.SMTP_HOST, // SMTP host, e.g. 'smtp.mailtrap.io' or your SMTP server
+  port: parseInt(process.env.SMTP_PORT), // SMTP port, e.g. 587 or 465 for secure connection
+  secure: process.env.SMTP_SECURE === "true", // True for SSL/TLS, False for non-secure connection
+  auth: {
+    user: process.env.SMTP_USER, // SMTP username
+    pass: process.env.SMTP_PASS, // SMTP password
+  },
+});
 
 // Function to send the password reset email
 const sendPasswordResetEmail = async (email, token) => {
@@ -147,7 +139,10 @@ export async function POST(req) {
   // Optionally validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
-    return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid email format" },
+      { status: 400 }
+    );
   }
 
   try {
