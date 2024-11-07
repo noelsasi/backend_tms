@@ -44,6 +44,8 @@ model User {
   created_at        DateTime   @default(now())
   updated_at        DateTime   @updatedAt
   verified          Boolean    @default(false)
+  resetToken            String?  // Optional field to store reset token
+  resetTokenExpires     DateTime? 
   emailVerified         DateTime? 
   verificationToken     String?  // Token for email verification
   verificationTokenExpires DateTime?
