@@ -43,6 +43,10 @@ model User {
   profilePic   String    @db.VarChar(255) // Nullable if not provided
   created_at        DateTime   @default(now())
   updated_at        DateTime   @updatedAt
+  verified          Boolean    @default(false)
+  emailVerified         DateTime? 
+  verificationToken     String?  // Token for email verification
+  verificationTokenExpires DateTime?
 
   role              Role       @relation(fields: [role_id], references: [id])
   theses            Thesis[]   @relation("AuthorThesis")
