@@ -30,7 +30,7 @@ export function withRolePermission(permission) {
 
       // Check if user has the required permission
       const hasPerm = await hasPermission(user.id, permission);
-console.log("hasPerm", hasPerm);
+// console.log("hasPerm", hasPerm);
       if (!hasPerm) {
         return NextResponse.json({ message: 'Unauthorized: Permission denied' }, { status: 403 });
       }

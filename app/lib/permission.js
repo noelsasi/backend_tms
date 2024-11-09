@@ -16,9 +16,9 @@ export async function hasPermission(userId, permission) {
         },
       },
     });
-console.log("permission for this user is", user?.role?.permissions[0]?.permission);
+// console.log("permission for this user is", user?.role?.permissions[0]?.permission);
 const hasPerm = user?.role?.permissions[0]?.permission.includes(permission);
-console.log("hasPerm", hasPerm);
+// console.log("hasPerm", hasPerm);
     // Return true if the permission exists, false otherwise
     return hasPerm
   } catch (error) {
