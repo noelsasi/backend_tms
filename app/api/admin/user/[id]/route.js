@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"; // Import NextResponse
 import prisma from "../../../../lib/db"; // Importing the Prisma client
 import bcrypt from "bcryptjs"; // For password hashing
 import { z } from "zod"; // For validation
+import { getUserFromSession } from "@/app/lib/currentSesion";
 
 const updateUserSchema = z.object({
   email: z.string().email().optional(), // Email is optional for update
@@ -26,7 +27,7 @@ export const PUT = withRolePermission("MODIFY_USER")(
   async (req, { params }) => {
     const { id } = await params; // Extract user ID from URL params
     let body;
-
+    const currentUser = await getUserFromSession(req);
     try {
       // Step 1: Parse incoming request body
       body = await req.json();
@@ -110,6 +111,13 @@ export const PUT = withRolePermission("MODIFY_USER")(
           role_id: roleId, // Update role if provided
         },
       });
+      await prisma.history.create({
+        data: {
+          user_id: currentUser.id, // ID of the admin or user performing the action
+          action: "Updated User",
+          description: `User with email ${updatedUser.email} updated by ${currentUser.email}`,
+        },
+      });
 
       // Step 8: Respond with success
       return NextResponse.json({
@@ -146,7 +154,7 @@ export const DELETE = withRolePermission("DELETE_USER")(
   async (req, { params }) => {
     // Await params before accessing `id`
     const { id } = await params;
-
+    const currentUser = await getUserFromSession(req);
     try {
       // Check if the user exists in the database
       const user = await prisma.user.findUnique({
@@ -166,6 +174,13 @@ export const DELETE = withRolePermission("DELETE_USER")(
       await prisma.user.delete({
         where: {
           id: BigInt(id),
+        },
+      });
+      await prisma.history.create({
+        data: {
+          user_id: currentUser.id, // ID of the admin or user performing the action
+          action: "Deleted User",
+          description: `User with email ${user.email} deleted by ${currentUser.email}`,
         },
       });
 
