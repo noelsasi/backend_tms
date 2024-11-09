@@ -35,6 +35,12 @@ CREATE TABLE `User` (
     `profilePic` VARCHAR(255) NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
+    `verified` BOOLEAN NOT NULL DEFAULT false,
+    `resetToken` VARCHAR(191) NULL,
+    `resetTokenExpires` DATETIME(3) NULL,
+    `emailVerified` DATETIME(3) NULL,
+    `verificationToken` VARCHAR(191) NULL,
+    `verificationTokenExpires` DATETIME(3) NULL,
 
     UNIQUE INDEX `User_username_key`(`username`),
     UNIQUE INDEX `User_email_key`(`email`),

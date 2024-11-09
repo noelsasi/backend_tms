@@ -147,10 +147,10 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendVerificationEmail = async (email, token) => {
-  const verificationUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/verify-email?token=${token}`;
+  const verificationUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/verify?token=${token}`;
 
   const message = {
-    from: 'no-reply@example.com',
+    from: 'no-reply@uta.cloud',
     to: email,
     subject: 'Please verify your email',
     html: `<p>Click <a href="${verificationUrl}">here</a> to verify your email address.</p>`,

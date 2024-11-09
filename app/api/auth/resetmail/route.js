@@ -102,10 +102,10 @@ const transporter = nodemailer.createTransport({
 
 // Function to send the password reset email
 const sendPasswordResetEmail = async (email, token) => {
-  const resetUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/reset-password?token=${token}`;
+  const resetUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/auth/resetpass?token=${token}`;
 
   const message = {
-    from: "no-reply@example.com", // The email from which the password reset is sent
+    from: 'no-reply@uta.cloud', // The email from which the password reset is sent
     to: email, // The recipient's email address
     subject: "Password Reset Request",
     html: `<p>Click <a href="${resetUrl}">here</a> to reset your password.</p>`,

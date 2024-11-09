@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "seed": "node prisma/seed.js",
+    "seed": "node prisma/seed2.js",
     "lint": "next lint"
   },
   "dependencies": {
