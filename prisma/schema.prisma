@@ -49,6 +49,7 @@ model User {
   emailVerified         DateTime? 
   verificationToken     String?  // Token for email verification
   verificationTokenExpires DateTime?
+  
 
   role              Role       @relation(fields: [role_id], references: [id])
   theses            Thesis[]   @relation("AuthorThesis")
@@ -59,6 +60,8 @@ model User {
   history           History[]
   comments          ThesisComment[]
   ThesisVote        ThesisVote[]
+  
+  
 }
 
 model Thesis {
