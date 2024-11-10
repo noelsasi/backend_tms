@@ -38,13 +38,19 @@ async function main() {
       permission: [
         "CREATE_USER",
         "MODIFY_USER",
+        "DELETE_USER",
         "CREATE_THESIS",
         "MODIFY_THESIS",
+        "DELETE_THESIS",
         "CREATE_GUIDELINE",
         "MODIFY_GUIDELINE",
+        "DELETE_GUIDELINE",
         "VIEW_THESIS",
         "CREATE_PEER_REVIEW",
         "MODIFY_PEER_REVIEW",
+        "DELETE_PEER_REVIEW",
+        "VIEW_PROFILE",
+        "UPDATE_PROFILE",
       ],
     },
   });
@@ -55,9 +61,18 @@ async function main() {
       permission: [
         "CREATE_THESIS",
         "MODIFY_THESIS",
+        "DELETE_THESIS",
         "SUBMIT_THESIS",
+        "CREATE_GUIDELINE",
+        "MODIFY_GUIDELINE",
+        "DELETE_GUIDELINE",
         "VIEW_THESIS",
+        "CREATE_PEER_REVIEW",
+        "MODIFY_PEER_REVIEW",
+        "DELETE_PEER_REVIEW",
         "MY_THESIS",
+        "VIEW_PROFILE",
+        "UPDATE_PROFILE",
       ],
     },
   });
@@ -65,7 +80,13 @@ async function main() {
   const userPermissions = await prisma.permission.create({
     data: {
       role_id: userRole.id,
-      permission: ["VIEW_THESIS", "SUBMIT_THESIS", "MY_THESIS"],
+      permission: [
+        "VIEW_THESIS",
+        "SUBMIT_THESIS",
+        "MY_THESIS",
+        "VIEW_PROFILE",
+        "UPDATE_PROFILE",
+      ],
     },
   });
 
@@ -187,18 +208,27 @@ async function main() {
   // Create peer messages
   const peerMessage1 = await prisma.peerMessage.create({
     data: {
+      title: "Peer Review 1",
+      review: "This thesis is a great exploration of AI.",
+      review_date: new Date(),
+      status: "pending",
       thesis_id: thesis.thesis_id,
-      user_id: scholarUser.id,
-      message_content: "This thesis is a great exploration of AI.",
+      reviewer_id: scholarUser.id,
+      created_at: new Date(),
+      updated_at: new Date(),
     },
   });
 
   const peerMessage2 = await prisma.peerMessage.create({
     data: {
+      title: "Peer Review 2",
+      review: "I agree! We should explore the ethical implications further.",
+      review_date: new Date(),
+      status: "pending",
       thesis_id: thesis.thesis_id,
-      user_id: adminUser.id,
-      message_content:
-        "I agree! We should explore the ethical implications further.",
+      reviewer_id: adminUser.id,
+      created_at: new Date(),
+      updated_at: new Date(),
     },
   });
 
@@ -222,17 +252,17 @@ async function main() {
   console.log("Notifications created:", notification1, notification2);
 
   // Create guideline templates
-  // const guidelineTemplate1 = await prisma.guidelines.create({
-  //   data: {
-  //     user_id: adminUser.id,
-        
-  //     file_url: "https://example.com/guideline1.pdf",
-  //     title: "Guideline 1",
-  //     description: "This is the first guideline for AI research.",
-  //     created_at: new Date(),
-  //     updated_at: new Date(),
-  //   },
-  // });
+  const guidelineTemplate1 = await prisma.guidelines.create({
+    data: {
+      user_id: adminUser.id,
+
+      file_url: "https://example.com/guideline1.pdf",
+      title: "Guideline 1",
+      description: "This is the first guideline for AI research.",
+      created_at: new Date(),
+      updated_at: new Date(),
+    },
+  });
 
   console.log("Guideline Template created:", guidelineTemplate1);
 

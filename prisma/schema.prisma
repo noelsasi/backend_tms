@@ -57,6 +57,7 @@ model User {
   notifications     Notification[]
   guidelines        Guidelines[]
   history           History[]
+  comments          ThesisComment[]
 }
 
 model Thesis {
@@ -76,6 +77,7 @@ model Thesis {
   views           ThesisView[]
   downloads       ThesisDownload[]
   peer_messages   PeerMessage[]
+  comments        ThesisComment[]
 }
 
 model ThesisView {
@@ -101,6 +103,20 @@ model ThesisDownload {
 }
 
 model PeerMessage {
+  id          BigInt     @id @default(autoincrement())
+  title       String     @db.VarChar(255) 
+  review      String     @db.Text
+  review_date DateTime   @db.Date
+  status      String     @db.VarChar(10)@default("pending")
+  thesis_id   BigInt    
+  reviewer_id BigInt   
+  created_at  DateTime   @default(now())
+  updated_at  DateTime   @updatedAt
+
+  thesis      Thesis     @relation(fields: [thesis_id], references: [thesis_id])
+  reviewer    User       @relation(fields: [reviewer_id], references: [id])
+}
+model ThesisComment {
   id              BigInt     @id @default(autoincrement())
   thesis_id       BigInt
   user_id         BigInt

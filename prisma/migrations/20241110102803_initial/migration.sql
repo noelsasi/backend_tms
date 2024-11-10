@@ -90,6 +90,21 @@ CREATE TABLE `ThesisDownload` (
 -- CreateTable
 CREATE TABLE `PeerMessage` (
     `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `title` VARCHAR(255) NOT NULL,
+    `review` TEXT NOT NULL,
+    `review_date` DATE NOT NULL,
+    `status` VARCHAR(10) NOT NULL DEFAULT 'pending',
+    `thesis_id` BIGINT NOT NULL,
+    `reviewer_id` BIGINT NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `ThesisComment` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
     `thesis_id` BIGINT NOT NULL,
     `user_id` BIGINT NOT NULL,
     `message_content` TEXT NOT NULL,
@@ -171,7 +186,13 @@ ALTER TABLE `ThesisDownload` ADD CONSTRAINT `ThesisDownload_thesis_id_fkey` FORE
 ALTER TABLE `PeerMessage` ADD CONSTRAINT `PeerMessage_thesis_id_fkey` FOREIGN KEY (`thesis_id`) REFERENCES `Thesis`(`thesis_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `PeerMessage` ADD CONSTRAINT `PeerMessage_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `PeerMessage` ADD CONSTRAINT `PeerMessage_reviewer_id_fkey` FOREIGN KEY (`reviewer_id`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ThesisComment` ADD CONSTRAINT `ThesisComment_thesis_id_fkey` FOREIGN KEY (`thesis_id`) REFERENCES `Thesis`(`thesis_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ThesisComment` ADD CONSTRAINT `ThesisComment_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Notification` ADD CONSTRAINT `Notification_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
