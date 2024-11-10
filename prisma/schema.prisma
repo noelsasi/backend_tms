@@ -60,10 +60,24 @@ model User {
   history           History[]
   comments          ThesisComment[]
   ThesisVote        ThesisVote[]
+   messages    Message[]  @relation("SenderMessages")
+  receivedMessages Message[] @relation("ReceiverMessages")
   
   
 }
+model Message {
+  id            BigInt     @id @default(autoincrement())
+  sender_id     BigInt
+  receiver_id   BigInt
+  content       String
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
 
+  sender        User       @relation("SenderMessages", fields: [sender_id], references: [id])
+  receiver      User       @relation("ReceiverMessages", fields: [receiver_id], references: [id])
+
+  @@index([sender_id, receiver_id])
+}
 model Thesis {
   thesis_id       BigInt     @id @default(autoincrement())
   title           String     @db.VarChar(255)
