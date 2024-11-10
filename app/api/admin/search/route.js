@@ -301,7 +301,9 @@ export const POST = withRolePermission("VIEW_THESIS")(async (req) => {
     } = parsedBody;
 
     // Step 3: Parse and format start_date and end_date
-    const startDate = start_date ? new Date(start_date + "T00:00:00Z") : undefined;
+    const startDate = start_date
+      ? new Date(start_date + "T00:00:00Z")
+      : undefined;
     const endDate = end_date ? new Date(end_date + "T23:59:59Z") : undefined;
 
     // Step 4: Build the search criteria
@@ -311,7 +313,7 @@ export const POST = withRolePermission("VIEW_THESIS")(async (req) => {
         category ? { category: { contains: category } } : undefined,
         keywords && keywords.length > 0
           ? {
-            keywords: {
+              keywords: {
                 array_contains: keywords, // Match the keywords array with the input list
               },
             }
@@ -342,7 +344,7 @@ export const POST = withRolePermission("VIEW_THESIS")(async (req) => {
               author: {
                 username: {
                   contains: author_name,
-                //   mode: "insensitive", // Make author search case insensitive
+                  //   mode: "insensitive", // Make author search case insensitive
                 },
               },
             }
@@ -351,16 +353,42 @@ export const POST = withRolePermission("VIEW_THESIS")(async (req) => {
     };
 
     // Step 5: Perform the query to search for theses
+    // const theses = await prisma.thesis.findMany({
+    //   where: whereConditions,
+    //   include: {
+    //     author: true,
+    //     reviewer: true,
+    //     views: true,
+    //     downloads: true,
+    //     document_url: true,
+    //   },
+    // });
     const theses = await prisma.thesis.findMany({
-      where: whereConditions,
-      include: {
-        author: true,
-        reviewer: true,
-        views: true,
-        downloads: true,
-      },
-    });
-
+        where: whereConditions,
+        select: {
+          thesis_id: true,
+          title: true,
+          category: true,
+          keywords: true,
+          abstract: true,
+          status: true,
+          created_at: true,
+          updated_at: true,
+          author: {
+            select: {
+              username: true,
+            },
+          },
+          reviewer: {
+            select: {
+              username: true,
+            },
+          },
+          views: true,
+          downloads: true,
+          document_url: true, // Directly select document_url here
+        },
+      });
     // Step 6: Map over the results to convert BigInt to string
     const thesesResponse = theses.map((thesis) => ({
       thesis_id: thesis.thesis_id.toString(), // Convert BigInt to string
@@ -376,6 +404,7 @@ export const POST = withRolePermission("VIEW_THESIS")(async (req) => {
       views: thesis.views.length,
       downloads: thesis.downloads.length,
       reviewer_name: thesis.reviewer ? thesis.reviewer.username : null,
+      document_url: thesis.document_url,
     }));
 
     // Step 7: Return the search results
