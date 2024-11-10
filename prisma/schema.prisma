@@ -58,6 +58,7 @@ model User {
   guidelines        Guidelines[]
   history           History[]
   comments          ThesisComment[]
+  ThesisVote        ThesisVote[]
 }
 
 model Thesis {
@@ -67,10 +68,12 @@ model Thesis {
   keywords        Json       // Storing as JSON for array-like behavior
   document_url    String     @db.VarChar(255)
   status          String     @db.VarChar(10)
+  category        String     @db.VarChar(10)@default("Other")
   author_id       BigInt
   reviewer_id     BigInt
   created_at      DateTime   @default(now())
   updated_at      DateTime   @updatedAt
+   // Track number of downvotes
 
   author          User       @relation("AuthorThesis", fields: [author_id], references: [id])
   reviewer        User       @relation("ReviewerThesis", fields: [reviewer_id], references: [id])
@@ -78,8 +81,25 @@ model Thesis {
   downloads       ThesisDownload[]
   peer_messages   PeerMessage[]
   comments        ThesisComment[]
+   ThesisVote    ThesisVote[]
+}
+model ThesisVote {
+  id        BigInt   @id @default(autoincrement()) @db.BigInt
+  thesis_id BigInt   @db.BigInt
+  user_id   BigInt   @db.BigInt
+  vote_type VoteType
+  created_at DateTime @default(now())
+
+  thesis    Thesis @relation(fields: [thesis_id], references: [thesis_id])
+  user      User   @relation(fields: [user_id], references: [id])
+
+  @@unique([thesis_id, user_id])
 }
 
+enum VoteType {
+  UPVOTE
+  DOWNVOTE
+}
 model ThesisView {
   id          BigInt     @id @default(autoincrement())
   thesis_id   BigInt
