@@ -77,7 +77,8 @@ model Thesis {
   created_at      DateTime   @default(now())
   updated_at      DateTime   @updatedAt
    // Track number of downvotes
-
+views_count      Int        @default(0) // Track total views
+  downloads_count  Int        @default(0)
   author          User       @relation("AuthorThesis", fields: [author_id], references: [id])
   reviewer        User       @relation("ReviewerThesis", fields: [reviewer_id], references: [id])
   views           ThesisView[]

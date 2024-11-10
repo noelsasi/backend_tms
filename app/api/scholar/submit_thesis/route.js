@@ -1,11 +1,3 @@
-import { withRolePermission } from "../../../lib/middleware";
-import { NextResponse } from "next/server"; // Import NextResponse
-import prisma from "../../../lib/db"; // Importing the Prisma client
-import { getUserFromSession } from "../../../lib/currentSesion"; // For getting current session
-import { z } from "zod";
-
-// Handle GET request
-// app/api/theses/route.js
 export async function GET(req) {
   try {
     // Step 1: Get the current user from the session
@@ -72,19 +64,29 @@ export async function GET(req) {
     ); // Internal Server Error
   }
 }
+import { withRolePermission } from "../../../lib/middleware";
+import { NextResponse } from "next/server"; // Import NextResponse
+import prisma from "../../../lib/db"; // Importing the Prisma client
+import { getUserFromSession } from "../../../lib/currentSesion"; // For getting current session
+import { z } from "zod"; // Zod for validation
+
+// Schema for validating the incoming request body
 const createThesisSchema = z.object({
-  title: z.string().min(1), // Title is required
-  category: z.string().optional(), // Category is optional
-  keywords: z.array(z.string()).optional(), // Array of strings for keywords (optional)
-  abstract: z.string().optional(), // Abstract is optional
-  document_url: z.string().optional(), // Document URL is optional
-  status: z.enum(["Pending", "Approved", "Rejected"]).default("Pending"), // Default status is "Pending"
+  title: z.string().min(1),
+  category: z.string().optional(),
+  keywords: z.array(z.string()).optional(),
+  abstract: z.string().optional(),
+  document_url: z.string().optional(),
+  status: z.enum(["Pending", "Approved", "Rejected"]).optional(),
 });
 
+// Handle POST request for submitting a thesis
 export async function POST(req) {
   try {
     // Step 1: Get the current user from the session
     const currentUser = await getUserFromSession(req);
+
+    // If the user is not authenticated, return 401
     if (!currentUser) {
       return NextResponse.json(
         { message: "User not authenticated" },
@@ -92,11 +94,12 @@ export async function POST(req) {
       );
     }
 
-    // Step 2: Ensure that the body is not null or malformed
+    // Step 2: Parse and validate the request body
     let body = null;
     try {
       body = await req.json();
     } catch (parseError) {
+      // Handle malformed or empty body
       return NextResponse.json(
         { message: "Request body is empty or malformed" },
         { status: 400 }
@@ -110,10 +113,10 @@ export async function POST(req) {
       );
     }
 
-    // Step 3: Parse and validate the request body using Zod
+    // Validate the parsed body using Zod schema
     const parsedBody = createThesisSchema.parse(body);
 
-    // Step 4: Create the new thesis in the database
+    // Step 3: Create the new thesis in the database
     const newThesis = await prisma.thesis.create({
       data: {
         title: parsedBody.title,
@@ -122,11 +125,11 @@ export async function POST(req) {
         keywords: parsedBody.keywords ? parsedBody.keywords.join(",") : "", // Store keywords as a CSV string
         abstract: parsedBody.abstract || "", // Default to empty string if no abstract
         document_url: parsedBody.document_url || "", // Default to empty string if no document URL
-        status: parsedBody.status, // Status provided in the request
+        status: parsedBody.status || "Pending", // Default to "Pending" if no status provided
       },
     });
 
-    // Step 5: Format the created thesis data for the response
+    // Step 4: Format the created thesis data for the response
     const thesisResponse = {
       thesis_id: newThesis.thesis_id.toString(),
       title: newThesis.title,
@@ -140,7 +143,7 @@ export async function POST(req) {
       updated_at: newThesis.updated_at.toISOString(),
     };
 
-    // Step 6: Return the created thesis data as a response
+    // Step 5: Return the created thesis data as a response
     return NextResponse.json({
       message: "Thesis created successfully",
       thesis: thesisResponse,
@@ -150,13 +153,10 @@ export async function POST(req) {
 
     // Handle Zod validation errors
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { message: "Validation failed", errors: error.errors },
-        { status: 400 }
-      );
+      return NextResponse.json({ message: "Validation failed", errors: error.errors }, { status: 400 });
     }
 
-    // Internal server error
+    // Handle unexpected internal errors
     return NextResponse.json(
       { message: "Internal Server Error", error: error.message || error },
       { status: 500 }
