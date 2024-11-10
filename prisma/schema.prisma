@@ -55,7 +55,7 @@ model User {
   reviewerTheses    Thesis[]   @relation("ReviewerThesis")
   peer_messages     PeerMessage[]
   notifications     Notification[]
-  guideline_templates GuidelineTemplate[]
+  guidelines        Guidelines[]
   history           History[]
 }
 
@@ -122,11 +122,12 @@ model Notification {
   user        User       @relation(fields: [user_id], references: [id])
 }
 
-model GuidelineTemplate {
+model Guidelines {
   id          BigInt     @id @default(autoincrement())
   user_id     BigInt
-  rules       Json       // Storing as JSON for array-like behavior
-  file_url    String     @db.VarChar(250)
+   title       String     @unique @default("") @db.VarChar(100)
+ description String     @db.Text
+  file_url    String?     @db.VarChar(250)
   created_at  DateTime   @default(now())
   updated_at  DateTime   @updatedAt
 

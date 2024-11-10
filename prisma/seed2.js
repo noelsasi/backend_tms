@@ -222,13 +222,17 @@ async function main() {
   console.log("Notifications created:", notification1, notification2);
 
   // Create guideline templates
-  const guidelineTemplate1 = await prisma.guidelineTemplate.create({
-    data: {
-      user_id: adminUser.id,
-      rules: { "AI Research": "Follow ethical AI guidelines." },
-      file_url: "https://example.com/guideline1.pdf",
-    },
-  });
+  // const guidelineTemplate1 = await prisma.guidelines.create({
+  //   data: {
+  //     user_id: adminUser.id,
+        
+  //     file_url: "https://example.com/guideline1.pdf",
+  //     title: "Guideline 1",
+  //     description: "This is the first guideline for AI research.",
+  //     created_at: new Date(),
+  //     updated_at: new Date(),
+  //   },
+  // });
 
   console.log("Guideline Template created:", guidelineTemplate1);
 
