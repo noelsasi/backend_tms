@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import prisma from '../../../lib/db'; // Prisma client instance
 
 // API endpoint to get statistics and graph values
-export async function GET() {
+export async function GET()  {
   try {
     // 1. Total Views by Each Thesis
     const totalViewsByThesis = await prisma.thesisView.groupBy({

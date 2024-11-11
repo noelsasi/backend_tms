@@ -147,7 +147,7 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendVerificationEmail = async (email, token) => {
-  const verificationUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/verify?token=${token}`;
+  const verificationUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/auth/verify?token=${token}`;
 
   const message = {
     from: 'no-reply@uta.cloud',
