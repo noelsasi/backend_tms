@@ -9,7 +9,7 @@ const updateUserSchema = z.object({
   email: z.string().email().optional(), // Email is optional for update
   firstname: z.string().min(1).optional(),
   lastname: z.string().min(1).optional(),
-  gender: z.enum(["Male", "Female", "Other"]).optional(),
+  gender: z.enum(["male", "female", "other"]).optional(),
   dob: z
     .string()
     .refine((val) => !isNaN(Date.parse(val)), {
@@ -19,7 +19,7 @@ const updateUserSchema = z.object({
   phone: z.string().min(10).max(15).optional(),
   address: z.string().min(1).optional(),
   profilePic: z.string().url().optional(),
-  role_name: z.enum(["User", "Admin", "Scholar"]).optional(), // Role validation (optional for update)
+  role_name: z.enum(["user", "admin", "scholar"]).optional(), // Role validation (optional for update)
   password: z.string().min(6).optional(), // Password is optional for update
 });
 

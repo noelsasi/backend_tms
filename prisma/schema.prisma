@@ -1,5 +1,3 @@
-// schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -36,21 +34,20 @@ model User {
   role_id           BigInt
   firstname         String     @db.VarChar(50)
   lastname          String     @db.VarChar(50)
-  gender            String    @db.VarChar(10) // Nullable if not provided
-  dob               DateTime  // Nullable if not provided
-  phone             String    @db.VarChar(15) // Nullable if not provided
-  address           String    @db.VarChar(255) // Nullable if not provided
-  profilePic   String    @db.VarChar(255) // Nullable if not provided
+  gender            String?    @db.VarChar(10) // Nullable if not provided
+  dob               DateTime?  // Nullable if not provided
+  phone             String?    @db.VarChar(15) // Nullable if not provided
+  address           String?    @db.VarChar(255) // Nullable if not provided
+  profilePic        String?    @db.VarChar(255) // Nullable if not provided
   created_at        DateTime   @default(now())
   updated_at        DateTime   @updatedAt
   verified          Boolean    @default(false)
-  resetToken            String?  // Optional field to store reset token
-  resetTokenExpires     DateTime? 
-  emailVerified         DateTime? 
-  verificationToken     String?  // Token for email verification
+  resetToken        String?    // Optional field to store reset token
+  resetTokenExpires DateTime? 
+  emailVerified     DateTime? 
+  verificationToken String?    // Token for email verification
   verificationTokenExpires DateTime?
   
-
   role              Role       @relation(fields: [role_id], references: [id])
   theses            Thesis[]   @relation("AuthorThesis")
   reviewerTheses    Thesis[]   @relation("ReviewerThesis")
@@ -60,24 +57,24 @@ model User {
   history           History[]
   comments          ThesisComment[]
   ThesisVote        ThesisVote[]
-   messages    Message[]  @relation("SenderMessages")
-  receivedMessages Message[] @relation("ReceiverMessages")
-  
-  
-}
-model Message {
-  id            BigInt     @id @default(autoincrement())
-  sender_id     BigInt
-  receiver_id   BigInt
-  content       String
-  created_at    DateTime   @default(now())
-  updated_at    DateTime   @updatedAt
+  messages          Message[]  @relation("SenderMessages")
+  receivedMessages  Message[]  @relation("ReceiverMessages")
+  }
 
-  sender        User       @relation("SenderMessages", fields: [sender_id], references: [id])
-  receiver      User       @relation("ReceiverMessages", fields: [receiver_id], references: [id])
+model Message {
+  id          BigInt     @id @default(autoincrement())
+  sender_id   BigInt
+  receiver_id BigInt
+  content     String     @db.Text
+  created_at  DateTime   @default(now())
+  updated_at  DateTime   @updatedAt
+
+  sender      User       @relation("SenderMessages", fields: [sender_id], references: [id])
+  receiver    User       @relation("ReceiverMessages", fields: [receiver_id], references: [id])
 
   @@index([sender_id, receiver_id])
 }
+
 model Thesis {
   thesis_id       BigInt     @id @default(autoincrement())
   title           String     @db.VarChar(255)
@@ -85,24 +82,25 @@ model Thesis {
   keywords        Json       // Storing as JSON for array-like behavior
   document_url    String     @db.VarChar(255)
   status          String     @db.VarChar(10)
-  category        String     @db.VarChar(10)@default("Other")
+  category        String     @db.VarChar(10) @default("Other")
   author_id       BigInt
-  reviewer_id     BigInt
+  reviewer_id     BigInt?     
   created_at      DateTime   @default(now())
   updated_at      DateTime   @updatedAt
-   // Track number of downvotes
-    upvotes       Int      @default(0)   // Field to track upvotes
-  downvotes     Int      @default(0)   // Field to track downvotes
-views_count      Int        @default(0) // Track total views
-  downloads_count  Int        @default(0)
+  upvotes         Int        @default(0)   // Field to track upvotes
+  downvotes       Int        @default(0)   // Field to track downvotes
+  views_count     Int        @default(0)   // Track total views
+  downloads_count Int        @default(0)   // Track downloads
+
   author          User       @relation("AuthorThesis", fields: [author_id], references: [id])
-  reviewer        User       @relation("ReviewerThesis", fields: [reviewer_id], references: [id])
+  reviewer        User?       @relation("ReviewerThesis", fields: [reviewer_id], references: [id])
   views           ThesisView[]
   downloads       ThesisDownload[]
   peer_messages   PeerMessage[]
   comments        ThesisComment[]
-   ThesisVote    ThesisVote[]
+  ThesisVote      ThesisVote[]
 }
+
 model ThesisVote {
   id        BigInt   @id @default(autoincrement()) @db.BigInt
   thesis_id BigInt   @db.BigInt
@@ -120,6 +118,7 @@ enum VoteType {
   UPVOTE
   DOWNVOTE
 }
+
 model ThesisView {
   id          BigInt     @id @default(autoincrement())
   thesis_id   BigInt
@@ -147,7 +146,7 @@ model PeerMessage {
   title       String     @db.VarChar(255) 
   review      String     @db.Text
   review_date DateTime   @db.Date
-  status      String     @db.VarChar(10)@default("pending")
+  status      String     @db.VarChar(10) @default("pending")
   thesis_id   BigInt    
   reviewer_id BigInt   
   created_at  DateTime   @default(now())
@@ -156,11 +155,12 @@ model PeerMessage {
   thesis      Thesis     @relation(fields: [thesis_id], references: [thesis_id])
   reviewer    User       @relation(fields: [reviewer_id], references: [id])
 }
+
 model ThesisComment {
   id              BigInt     @id @default(autoincrement())
   thesis_id       BigInt
   user_id         BigInt
-  message_content  String     @db.Text
+  message_content String     @db.Text
   created_at      DateTime   @default(now())
   updated_at      DateTime   @updatedAt
 
@@ -171,7 +171,7 @@ model ThesisComment {
 model Notification {
   id          BigInt     @id @default(autoincrement())
   user_id     BigInt
-  message      String     @db.VarChar(255)
+  message     String     @db.VarChar(255)
   created_at  DateTime   @default(now())
   updated_at  DateTime   @updatedAt
 
@@ -181,9 +181,9 @@ model Notification {
 model Guidelines {
   id          BigInt     @id @default(autoincrement())
   user_id     BigInt
-   title       String     @unique @default("") @db.VarChar(100)
- description String     @db.Text
-  file_url    String?     @db.VarChar(250)
+  title       String     @unique @default("") @db.VarChar(100)
+  description String     @db.Text
+  file_url    String?    @db.VarChar(250)
   created_at  DateTime   @default(now())
   updated_at  DateTime   @updatedAt
 

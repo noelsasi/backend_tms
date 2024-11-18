@@ -280,7 +280,7 @@ const searchThesisSchema = z.object({
   keywords: z.array(z.string()).optional(),
   start_date: z.string().optional(),
   end_date: z.string().optional(),
-  status: z.enum(["Pending", "Approved", "Rejected"]).optional(),
+  status: z.enum(["pending", "approved", "rejected"]).optional(),
 });
 
 export const POST = withRolePermission("VIEW_THESIS")(async (req) => {

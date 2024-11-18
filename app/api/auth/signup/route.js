@@ -9,14 +9,14 @@ const signupSchema = z.object({
   password: z.string().min(6), // Password must be at least 6 characters
   firstname: z.string().min(1),
   lastname: z.string().min(1),
-  gender: z.enum(["Male", "Female", "Other"]), // Assuming fixed gender values
+  gender: z.enum(['male', 'female', 'other']), // Assuming fixed gender values
   dob: z.string().refine(val => !isNaN(Date.parse(val)), {
     message: "Invalid date",
   }), // Validate date format
   phone: z.string().min(10).max(15), // Validate phone length
   address: z.string().min(1),
   profilePic: z.string().url(),
-  role: z.enum(["User", "Admin","Scholar"]), // Role validation (can be extended based on your needs)
+  role: z.enum(['user', 'admin', 'scholar']), // Role validation (can be extended based on your needs)
 });
 
 export async function POST(req) {

@@ -15,7 +15,7 @@ const updatePeerReviewSchema = z.object({
       message: "Invalid date",
     })
     .optional(), // Optional for update
-  status: z.enum(["Pending", "Rejected", "Approved"]).optional(), // Optional for update
+  status: z.enum(["pending", "in review", "completed"]).optional(),
   reviewer_id: z.string().optional(), // Optional for update, in case reviewer_id is passed
 });
 
@@ -41,14 +41,14 @@ export const PUT = withRolePermission("MODIFY_PEER_REVIEW")(
       const parsedBody = updatePeerReviewSchema.parse(body);
 
       // Log parsed body to verify that the reviewer_id is being parsed correctly
-     
+
       // Step 2: Check if the peer review exists in the database
       const peerReview = await prisma.peerMessage.findUnique({
         where: { id: BigInt(id) },
       });
 
       // Log the peer review to verify its current state before update
-  
+
 
       if (!peerReview) {
         return NextResponse.json(
@@ -61,7 +61,7 @@ export const PUT = withRolePermission("MODIFY_PEER_REVIEW")(
       const currentUser = await getUserFromSession(req);
 
       // Log the current user ID to ensure we're using the correct one
-      
+
       // Step 4: Update the peer review in the database
       const updatedPeerReview = await prisma.peerMessage.update({
         where: { id: BigInt(id) },
@@ -77,7 +77,7 @@ export const PUT = withRolePermission("MODIFY_PEER_REVIEW")(
       });
 
       // Log the updated peer review to verify the change
-     
+
 
       // Step 5: Serialize the updated peer review (convert BigInt to string)
       const peerReviewResponse = {
@@ -121,46 +121,46 @@ export const PUT = withRolePermission("MODIFY_PEER_REVIEW")(
   }
 );
 export const DELETE = withRolePermission("DELETE_PEER_REVIEW")(
-    async (req, { params }) => {
-      const { id } = await params; // Retrieve the peer review ID from params
-  
-      try {
-        // Step 1: Check if the peer review exists in the database
-        const peerReview = await prisma.peerMessage.findUnique({
-          where: { id: BigInt(id) },
-        });
-  
-        if (!peerReview) {
-          return NextResponse.json(
-            { message: "Peer review not found" },
-            { status: 404 }
-          );
-        }
-  
-        // Step 2: Delete the peer review from the database
-        await prisma.peerMessage.delete({
-          where: { id: BigInt(id) },
-        });
-  
-        // Step 3: Log the action in the history (optional)
-        const currentUser = await getUserFromSession(req);
-        await prisma.history.create({
-          data: {
-            user_id: currentUser.id,
-            action: "Deleted Peer Review",
-            description: `Peer review for thesis ${peerReview.thesis_id} deleted by ${currentUser.email}`,
-          },
-        });
-  
-        // Step 4: Return success response
-        return NextResponse.json({ message: "Peer review deleted successfully" });
-      } catch (error) {
-        console.error("Error during peer review deletion:", error.message || error);
-        
+  async (req, { params }) => {
+    const { id } = await params; // Retrieve the peer review ID from params
+
+    try {
+      // Step 1: Check if the peer review exists in the database
+      const peerReview = await prisma.peerMessage.findUnique({
+        where: { id: BigInt(id) },
+      });
+
+      if (!peerReview) {
         return NextResponse.json(
-          { message: "Internal Server Error", error: error.message || error },
-          { status: 500 }
+          { message: "Peer review not found" },
+          { status: 404 }
         );
       }
+
+      // Step 2: Delete the peer review from the database
+      await prisma.peerMessage.delete({
+        where: { id: BigInt(id) },
+      });
+
+      // Step 3: Log the action in the history (optional)
+      const currentUser = await getUserFromSession(req);
+      await prisma.history.create({
+        data: {
+          user_id: currentUser.id,
+          action: "Deleted Peer Review",
+          description: `Peer review for thesis ${peerReview.thesis_id} deleted by ${currentUser.email}`,
+        },
+      });
+
+      // Step 4: Return success response
+      return NextResponse.json({ message: "Peer review deleted successfully" });
+    } catch (error) {
+      console.error("Error during peer review deletion:", error.message || error);
+
+      return NextResponse.json(
+        { message: "Internal Server Error", error: error.message || error },
+        { status: 500 }
+      );
     }
-  );
+  }
+);
