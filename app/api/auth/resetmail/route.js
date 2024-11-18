@@ -91,9 +91,9 @@ import { NextResponse } from 'next/server'
 
 // Create a Nodemailer transporter using the correct SMTP settings
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST, // SMTP host, e.g. 'smtp.mailtrap.io' or your SMTP server
-  port: parseInt(process.env.SMTP_PORT), // SMTP port, e.g. 587 or 465 for secure connection
-  secure: process.env.SMTP_SECURE === 'true', // True for SSL/TLS, False for non-secure connection
+  host: 'mail.sxb3349.uta.cloud', // SMTP host, e.g. 'smtp.mailtrap.io' or your SMTP server
+  port: 465, // SMTP port, e.g. 587 or 465 for secure connection
+  secure: true, // True for SSL/TLS, False for non-secure connection
   auth: {
     user: process.env.SMTP_USER, // SMTP username
     pass: process.env.SMTP_PASS, // SMTP password

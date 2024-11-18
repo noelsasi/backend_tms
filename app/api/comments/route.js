@@ -32,6 +32,7 @@ export async function GET(req) {
             username: true,
             firstname: true,
             lastname: true,
+            profilePic: true
           },
         },
       },

@@ -21,7 +21,7 @@ const sendVerificationEmail = async (email, token) => {
     'email', email,
     'token', token
   )
-  const verificationUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/auth/verify?token=${token}`;
+  const verificationUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/auth/verify?token=${token}&email=${email}`;
 
   const message = {
     from: 'no-reply@uta.cloud',

@@ -70,7 +70,7 @@ CREATE TABLE `Thesis` (
     `status` VARCHAR(10) NOT NULL,
     `category` VARCHAR(10) NOT NULL DEFAULT 'Other',
     `author_id` BIGINT NOT NULL,
-    `reviewer_id` BIGINT NOT NULL,
+    `reviewer_id` BIGINT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
     `upvotes` INTEGER NOT NULL DEFAULT 0,
@@ -210,7 +210,7 @@ ALTER TABLE `Message` ADD CONSTRAINT `Message_receiver_id_fkey` FOREIGN KEY (`re
 ALTER TABLE `Thesis` ADD CONSTRAINT `Thesis_author_id_fkey` FOREIGN KEY (`author_id`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Thesis` ADD CONSTRAINT `Thesis_reviewer_id_fkey` FOREIGN KEY (`reviewer_id`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Thesis` ADD CONSTRAINT `Thesis_reviewer_id_fkey` FOREIGN KEY (`reviewer_id`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `ThesisVote` ADD CONSTRAINT `ThesisVote_thesis_id_fkey` FOREIGN KEY (`thesis_id`) REFERENCES `Thesis`(`thesis_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
