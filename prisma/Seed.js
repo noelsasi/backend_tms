@@ -142,20 +142,107 @@ async function up() {
 
     console.log('Users created')
 
-    // Create a thesis
-    const thesis = await prisma.thesis.create({
-      data: {
+    // Create multiple theses
+    const thesesData = [
+      {
         title: 'Research on AI',
         abstract: 'This is a paper about Artificial Intelligence.',
         keywords: ['AI', 'Machine Learning', 'Data Science'],
-        document_url: 'https://www.scholarvault.com/thesis.pdf',
+        document_url: 'https://www.scholarvault.com/thesis1.pdf',
         status: 'submitted',
-        author_id: 2, // Assuming scholar user ID is 2
-        reviewer_id: 1, // Assuming admin user ID is 1
+        author_id: 2,
+        reviewer_id: 2,
       },
-    })
+      {
+        title: 'Quantum Computing Advances',
+        abstract: 'Exploring the latest in quantum computing.',
+        keywords: ['Quantum Computing', 'Qubits', 'Entanglement'],
+        document_url: 'https://www.scholarvault.com/thesis2.pdf',
+        status: 'approved',
+        author_id: 3,
+        reviewer_id: 2,
+      },
+      {
+        title: 'Blockchain Technology',
+        abstract: 'A comprehensive study on blockchain.',
+        keywords: ['Blockchain', 'Cryptocurrency', 'Decentralization'],
+        document_url: 'https://www.scholarvault.com/thesis3.pdf',
+        status: 'submitted',
+        author_id: 3,
+        reviewer_id: 2,
+      },
+      {
+        title: 'Renewable Energy Sources',
+        abstract: 'Investigating renewable energy solutions.',
+        keywords: ['Renewable Energy', 'Solar', 'Wind'],
+        document_url: 'https://www.scholarvault.com/thesis4.pdf',
+        status: 'submitted',
+        author_id: 3,
+        reviewer_id: 2,
+      },
+      {
+        title: 'Cybersecurity Threats',
+        abstract: 'Understanding modern cybersecurity threats.',
+        keywords: ['Cybersecurity', 'Threats', 'Protection'],
+        document_url: 'https://www.scholarvault.com/thesis5.pdf',
+        status: 'approved',
+        author_id: 3,
+        reviewer_id: 2,
+      },
+      {
+        title: 'Artificial Neural Networks',
+        abstract: 'Deep dive into neural networks.',
+        keywords: ['Neural Networks', 'Deep Learning', 'AI'],
+        document_url: 'https://www.scholarvault.com/thesis6.pdf',
+        status: 'submitted',
+        author_id: 3,
+        reviewer_id: 2,
+      },
+      {
+        title: 'Internet of Things (IoT)',
+        abstract: 'Exploring IoT applications and challenges.',
+        keywords: ['IoT', 'Smart Devices', 'Connectivity'],
+        document_url: 'https://www.scholarvault.com/thesis7.pdf',
+        status: 'submitted',
+        author_id: 3,
+        reviewer_id: 2,
+      },
+      {
+        title: 'Big Data Analytics',
+        abstract: 'Analyzing big data trends and tools.',
+        keywords: ['Big Data', 'Analytics', 'Data Science'],
+        document_url: 'https://www.scholarvault.com/thesis8.pdf',
+        status: 'approved',
+        author_id: 3,
+        reviewer_id: 2,
+      },
+      {
+        title: 'Augmented Reality',
+        abstract: 'The future of augmented reality technology.',
+        keywords: ['Augmented Reality', 'AR', 'Technology'],
+        document_url: 'https://www.scholarvault.com/thesis9.pdf',
+        status: 'submitted',
+        author_id: 3,
+        reviewer_id: 2,
+      },
+      {
+        title: '5G Networks',
+        abstract: 'Impact of 5G networks on communication.',
+        keywords: ['5G', 'Networks', 'Communication'],
+        document_url: 'https://www.scholarvault.com/thesis10.pdf',
+        status: 'approved',
+        author_id: 3,
+        reviewer_id: 2,
+      },
+    ]
 
-    console.log('Thesis created:', thesis)
+    for (const thesisData of thesesData) {
+      await prisma.thesis.create({
+        data: thesisData,
+      })
+    }
+
+    console.log('Theses created')
 
     // Create peer messages
     const peerMessages = [
@@ -164,7 +251,7 @@ async function up() {
         review: 'This thesis is a great exploration of AI.',
         review_date: new Date(),
         status: 'pending',
-        thesis_id: thesis.thesis_id,
+        thesis_id: Math.floor(Math.random() * 10) + 1,
         reviewer_id: 2,
       },
       {
@@ -172,7 +259,7 @@ async function up() {
         review: 'I agree! We should explore the ethical implications further.',
         review_date: new Date(),
         status: 'pending',
-        thesis_id: thesis.thesis_id,
+        thesis_id: Math.floor(Math.random() * 10) + 1,
         reviewer_id: 1,
       },
     ]

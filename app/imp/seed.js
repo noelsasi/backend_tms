@@ -1,6 +1,6 @@
-const { PrismaClient } = require('@prisma/client');
-const bcrypt = require('bcrypt');
-const prisma = new PrismaClient();
+const { PrismaClient } = require('@prisma/client')
+const bcrypt = require('bcrypt')
+const prisma = new PrismaClient()
 
 async function main() {
   // Seed Roles
@@ -11,7 +11,7 @@ async function main() {
       { role_name: 'user' },
       { role_name: 'guest' },
     ],
-  });
+  })
 
   // Seed Permissions
   await prisma.permission.createMany({
@@ -27,7 +27,7 @@ async function main() {
       { role_id: 3, permission: 'view_thesis' },
       { role_id: 4, permission: 'view_thesis' },
     ],
-  });
+  })
 
   // Seed Users with hashed passwords
   // for (let i = 1; i <= 10; i++) {
@@ -37,7 +37,7 @@ async function main() {
   //   await prisma.user.create({
   //     data: {
   //       username: `user_${i}`,
-  //       email: `user${i}@example.com`,
+  //       email: `user${i}@scholarvault.com`,
   //       password_hash: hashedPassword,
   //       role_id: i <= 2 ? 1 : i <= 4 ? 2 : 3,
   //       firstname: `FirstName${i}`,
@@ -52,18 +52,19 @@ async function main() {
   //   });
   // }
   for (let i = 1; i <= 10; i++) {
-    const password = `password${i}`; // Sample plain password
-    const hashedPassword = await bcrypt.hash(password, 10); // Hash the password
+    const password = `password${i}` // Sample plain password
+    const hashedPassword = await bcrypt.hash(password, 10) // Hash the password
 
-    const username = `user_${i}`;
-    const profilePic = i % 2 === 0 
-      ? `https://avatar.iran.liara.run/public/girl?username=${username}` 
-      : `https://avatar.iran.liara.run/public/boy?username=${username}`;
+    const username = `user_${i}`
+    const profilePic =
+      i % 2 === 0
+        ? `https://avatar.iran.liara.run/public/girl?username=${username}`
+        : `https://avatar.iran.liara.run/public/boy?username=${username}`
 
     await prisma.user.create({
       data: {
         username: username,
-        email: `user${i}@example.com`,
+        email: `user${i}@scholarvault.com`,
         password_hash: hashedPassword,
         role_id: i <= 2 ? 1 : i <= 4 ? 2 : 3,
         firstname: `FirstName${i}`,
@@ -76,7 +77,7 @@ async function main() {
         created_at: new Date(),
         updated_at: new Date(),
       },
-    });
+    })
   }
   // Seed Theses
   for (let i = 1; i <= 10; i++) {
@@ -85,14 +86,14 @@ async function main() {
         title: `Thesis Title ${i}`,
         abstract: `Abstract for thesis ${i}`,
         keywords: JSON.stringify([`keyword${i}`, `keyword${i + 1}`]),
-        document_url: `http://example.com/thesis${i}`,
+        document_url: `http://scholarvault.com/thesis${i}`,
         status: i % 2 === 0 ? 'approved' : 'submitted',
         author_id: (i % 8) + 1,
         reviewer_id: 1,
         created_at: new Date(),
         updated_at: new Date(),
       },
-    });
+    })
   }
 
   // Seed Thesis Views
@@ -105,7 +106,7 @@ async function main() {
         created_at: new Date(),
         updated_at: new Date(),
       },
-    });
+    })
   }
 
   // Seed Thesis Downloads
@@ -118,7 +119,7 @@ async function main() {
         created_at: new Date(),
         updated_at: new Date(),
       },
-    });
+    })
   }
 
   // Seed Peer Messages
@@ -131,7 +132,7 @@ async function main() {
         created_at: new Date(),
         updated_at: new Date(),
       },
-    });
+    })
   }
 
   // Seed Notifications
@@ -143,7 +144,7 @@ async function main() {
         created_at: new Date(),
         updated_at: new Date(),
       },
-    });
+    })
   }
 
   // Seed Guideline Templates
@@ -152,11 +153,11 @@ async function main() {
       data: {
         user_id: i,
         rules: JSON.stringify([`Rule ${i}A`, `Rule ${i}B`]),
-        file_url: `http://example.com/guideline${i}`,
+        file_url: `http://scholarvault.com/guideline${i}`,
         created_at: new Date(),
         updated_at: new Date(),
       },
-    });
+    })
   }
 
   // Seed History
@@ -169,7 +170,7 @@ async function main() {
         created_at: new Date(),
         updated_at: new Date(),
       },
-    });
+    })
   }
 
   // Seed Enquiry Forms
@@ -177,24 +178,23 @@ async function main() {
     await prisma.enquiryForm.create({
       data: {
         name: `Enquirer ${i}`,
-        email: `enquirer${i}@example.com`,
+        email: `enquirer${i}@scholarvault.com`,
         message: `Message from enquirer ${i}`,
         subject: `Inquiry Subject ${i}`,
         created_at: new Date(),
         updated_at: new Date(),
       },
-    });
+    })
   }
 
-  console.log('Database seeded successfully!');
+  console.log('Database seeded successfully!')
 }
 
 main()
   .catch(e => {
-    console.error(e);
-    process.exit(1);
+    console.error(e)
+    process.exit(1)
   })
   .finally(async () => {
-    await prisma.$disconnect();
-  });
-
+    await prisma.$disconnect()
+  })
