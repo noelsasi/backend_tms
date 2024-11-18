@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "seed": "node prisma/seed2.js",
+    "seed": "node -e 'require(\"./prisma/Seed.js\").up()'",
+    "unseed": "node -e 'require(\"./prisma/Seed.js\").down()'",
     "lint": "next lint"
   },
   "dependencies": {
