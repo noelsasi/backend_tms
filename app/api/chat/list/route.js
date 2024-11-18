@@ -2,61 +2,54 @@
 
 import prisma from "../../../lib/db"; // Assuming Prisma is set up
 import { NextResponse } from "next/server";
+import { getUserFromSession } from "../../../lib/currentSesion";
 
 export async function GET(req) {
-  const { userId } = req.query; // User ID of the logged-in user
-
-  if (!userId) {
-    return NextResponse.json(
-      { message: "User ID is required" },
-      { status: 400 }
-    );
-  }
-
   try {
-    // Fetch the latest message for each conversation involving the logged-in user
-    const conversations = await prisma.message.findMany({
-      where: {
-        OR: [
-          { sender_id: BigInt(userId) },
-          { receiver_id: BigInt(userId) },
-        ],
-      },
-      orderBy: {
-        created_at: 'desc',
-      },
-      select: {
-        sender: {
-          select: {
-            id: true,
-            username: true,
-          },
-        },
-        receiver: {
-          select: {
-            id: true,
-            username: true,
-          },
-        },
-        content: true,
-        created_at: true,
-      },
-      distinct: ['sender_id', 'receiver_id'],  // Get distinct conversations (latest message per pair)
-    });
+    const currentUser = await getUserFromSession(req);
+    if (!currentUser) {
+      return NextResponse.json(
+        { message: "User not authenticated" },
+        { status: 401 }
+      );
+    }
 
-    const usersWithLastMessages = conversations.map((message) => {
-      const otherUser = message.sender_id === BigInt(userId) ? message.receiver : message.sender;
-      return {
-        userId: otherUser.id,
-        username: otherUser.username,
-        lastMessage: message.content,
-        timestamp: message.created_at,
-      };
-    });
+    const conversations = await prisma.$queryRaw`
+      SELECT 
+        m.*,
+        u.username,
+        u.profilePic
+      FROM Message m
+      INNER JOIN (
+        SELECT 
+          CASE 
+            WHEN sender_id = ${currentUser.id} THEN receiver_id
+            ELSE sender_id
+          END as other_user_id,
+          MAX(created_at) as latest_message
+        FROM Message
+        WHERE sender_id = ${currentUser.id} OR receiver_id = ${currentUser.id}
+        GROUP BY other_user_id
+      ) latest ON (
+        (m.sender_id = ${currentUser.id} AND m.receiver_id = latest.other_user_id) OR
+        (m.receiver_id = ${currentUser.id} AND m.sender_id = latest.other_user_id)
+      ) AND m.created_at = latest.latest_message
+      INNER JOIN User u ON u.id = latest.other_user_id
+      ORDER BY m.created_at DESC
+    `;
 
-    return NextResponse.json({ conversations: usersWithLastMessages });
+    const formattedConversations = conversations.map((conv) => ({
+      id: conv.id.toString(),
+      other_user_id: conv.receiver_id.toString(),
+      username: conv.username,
+      profilePic: conv.profilePic,
+      last_message: conv.content,
+      last_message_time: conv.created_at.toISOString(),
+    }));
+
+    return NextResponse.json(formattedConversations);
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching conversations:", error);
     return NextResponse.json(
       { message: "Error fetching conversations", error: error.message },
       { status: 500 }
