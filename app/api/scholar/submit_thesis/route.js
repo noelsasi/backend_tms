@@ -77,7 +77,7 @@ const createThesisSchema = z.object({
   keywords: z.array(z.string()).optional(),
   abstract: z.string().optional(),
   document_url: z.string().optional(),
-  status: z.enum(["Pending", "Approved", "Rejected"]).optional(),
+  status: z.enum(['pending', 'approved', 'rejected']).optional(),
 });
 
 // Handle POST request for submitting a thesis
