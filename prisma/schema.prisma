@@ -82,7 +82,7 @@ model Thesis {
   keywords        Json       // Storing as JSON for array-like behavior
   document_url    String     @db.VarChar(255)
   status          String     @db.VarChar(10)
-  category        String     @db.VarChar(10) @default("Other")
+  category        String     @db.VarChar(255) @default("Other")
   author_id       BigInt
   reviewer_id     BigInt?     
   created_at      DateTime   @default(now())

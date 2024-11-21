@@ -105,31 +105,34 @@ export async function GET() {
 
     // 6. Views and Downloads by Day (Last 7 Days)
     const viewsByDay = await prisma.thesisView.groupBy({
-      by: ['date'],
+      by: ['created_at'],
       _count: {
-        date: true,
+        created_at: true,
       },
-      orderBy: { date: 'asc' },
+      orderBy: { created_at: 'asc' },
     })
 
     const downloadsByDay = await prisma.thesisDownload.groupBy({
-      by: ['date'],
+      by: ['created_at'],
       _count: {
-        date: true,
+        created_at: true,
       },
-      orderBy: { date: 'asc' },
+      orderBy: { created_at: 'asc' },
     })
 
-    const viewsAndDownloadsByDay = viewsByDay.map(view => {
-      const downloads = downloadsByDay.find(
-        download => download.date === view.date
-      )
-      return {
-        date: view.date,
-        views: view._count.date,
-        downloads: downloads?._count.date || 0,
-      }
-    })
+    // Handle empty data cases
+    const viewsAndDownloadsByDay = viewsByDay.length > 0 
+      ? viewsByDay.map(view => {
+          const downloads = downloadsByDay.find(
+            download => download.created_at === view.created_at
+          )
+          return {
+            date: view.created_at,
+            views: view._count.created_at,
+            downloads: downloads?._count.created_at || 0,
+          }
+        })
+      : [] // Return empty array if no views
 
     // Return all statistics in the response
     return NextResponse.json(
@@ -146,7 +149,7 @@ export async function GET() {
       { status: 200 }
     )
   } catch (error) {
-    console.error('Error fetching statistics:', error)
+    // console.error('Error fetching statistics:', error)
     return NextResponse.json(
       { message: 'Error fetching statistics', error: error.message },
       { status: 500 }
