@@ -13,6 +13,7 @@ const updateThesisSchema = z.object({
   abstract: z.string().optional(),
   status: z.enum(['pending', 'approved', 'rejected']).optional(),
   document_url: z.string().url().optional(),
+  reviewer_id: z.string().optional(), // Optional, but we'll use it to find the reviewer
 })
 
 export const PUT = withRolePermission('MODIFY_THESIS')(
@@ -55,6 +56,7 @@ export const PUT = withRolePermission('MODIFY_THESIS')(
           status: parsedBody.status ?? thesis.status,
           document_url: parsedBody.document_url ?? thesis.document_url,
           author_id: thesis.author_id, // Update author only if provided
+          reviewer_id: parsedBody.reviewer_id ?? thesis.reviewer_id, // Update reviewer only if provided
         },
       })
 

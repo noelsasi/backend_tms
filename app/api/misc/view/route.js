@@ -1,17 +1,15 @@
-import { NextResponse } from "next/server";
-import prisma  from "../../../lib/db"; // Assuming Prisma is set up
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextResponse } from 'next/server'
+import prisma from '../../../lib/db' // Assuming Prisma is set up
 
-export  async function POST(req, res) {
-    const body = await req.json()
-  const { thesisId, ipAddress } = body; // Extract thesisId and ipAddress from the body
+export async function POST(req, res) {
+  const body = await req.json()
+  const { thesisId, ipAddress } = body // Extract thesisId and ipAddress from the body
 
   if (!thesisId || !ipAddress) {
     return NextResponse.json(
-      { message: "Thesis ID and IP address are required" },
+      { message: 'Thesis ID and IP address are required' },
       { status: 400 }
-    );
-     
+    )
   }
 
   try {
@@ -24,7 +22,7 @@ export  async function POST(req, res) {
           gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // 24 hours ago
         },
       },
-    });
+    })
 
     if (!existingView) {
       // If no record exists, create a new view entry
@@ -33,7 +31,7 @@ export  async function POST(req, res) {
           thesis_id: BigInt(thesisId),
           ip_address: ipAddress,
         },
-      });
+      })
 
       // Increment the thesis view count
       await prisma.thesis.update({
@@ -43,29 +41,29 @@ export  async function POST(req, res) {
             increment: 1,
           },
         },
-      });
+      })
 
       // Return the updated views count
       const updatedThesis = await prisma.thesis.findUnique({
         where: { thesis_id: BigInt(thesisId) },
         select: { views_count: true },
-      });
+      })
 
-      return NextResponse.json({ views: updatedThesis.views_count });
+      return NextResponse.json({ views: updatedThesis.views_count })
     } else {
       // If the view already exists within 24 hours, just return the current count
       const currentThesis = await prisma.thesis.findUnique({
         where: { thesis_id: BigInt(thesisId) },
         select: { views_count: true },
-      });
+      })
 
-      return NextResponse.json({ views: currentThesis.views_count });
+      return NextResponse.json({ views: currentThesis.views_count })
     }
   } catch (error) {
-    console.error(error);
+    console.error(error)
     NextResponse.json(
-      { message: "Error tracking view", error: error.message },
+      { message: 'Error tracking view', error: error.message },
       { status: 500 }
-    );
+    )
   }
 }
