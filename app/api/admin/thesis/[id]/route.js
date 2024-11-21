@@ -9,9 +9,9 @@ const updateThesisSchema = z.object({
   title: z.string().min(1).optional(), // Optional for update
   author_id: z.string().min(1).optional(), // Optional, but we'll use it to find the author
   category: z.string().optional(),
-  keywords: z.array(z.string()).optional(), // Array of strings for keywords
+  keywords: z.string().optional(), // Array of strings for keywords
   abstract: z.string().optional(),
-  status: z.enum(['pending', 'approved', 'rejected']).optional(),
+  status: z.enum(['pending', 'approved', 'rejected', 'deleted']).optional(),
   document_url: z.string().url().optional(),
   reviewer_id: z.string().optional(), // Optional, but we'll use it to find the reviewer
 })
@@ -51,12 +51,16 @@ export const PUT = withRolePermission('MODIFY_THESIS')(
         data: {
           title: parsedBody.title ?? thesis.title,
           category: parsedBody.category ?? thesis.category,
-          keywords: parsedBody.keywords ?? thesis.keywords, // Store keywords as JSON
+          keywords: parsedBody.keywords
+            ? JSON.stringify(parsedBody.keywords)
+            : thesis.keywords,
           abstract: parsedBody.abstract ?? thesis.abstract,
           status: parsedBody.status ?? thesis.status,
           document_url: parsedBody.document_url ?? thesis.document_url,
-          author_id: thesis.author_id, // Update author only if provided
-          reviewer_id: parsedBody.reviewer_id ?? thesis.reviewer_id, // Update reviewer only if provided
+          author_id: thesis.author_id,
+          reviewer_id: parsedBody.reviewer_id
+            ? BigInt(parsedBody.reviewer_id)
+            : thesis.reviewer_id,
         },
       })
 
@@ -66,7 +70,7 @@ export const PUT = withRolePermission('MODIFY_THESIS')(
         title: updatedThesis.title,
         author_id: updatedThesis.author_id.toString(),
         category: updatedThesis.category,
-        keywords: updatedThesis.keywords, // Should return as a JSON array
+        keywords: JSON.parse(updatedThesis.keywords), // Parse JSON string back to array
         abstract: updatedThesis.abstract,
         status: updatedThesis.status,
         created_at: updatedThesis.created_at.toISOString(),

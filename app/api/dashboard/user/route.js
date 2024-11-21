@@ -1,47 +1,32 @@
 import { NextResponse } from 'next/server'
 import prisma from '../../../lib/db' // Prisma client instance
-import { getUserFromSession } from '../../../lib/currentSesion'
 
-export async function GET(request) {
+// API endpoint to get statistics and graph values
+export async function GET() {
   try {
-    // Step 1: Get the authenticated user
-    const user = await getUserFromSession(request)
-    if (!user) {
-      return NextResponse.json(
-        { message: 'User not authenticated' },
-        { status: 401 }
-      )
-    }
-
-    // 2. Get the theses authored by the authenticated user
-    const userTheses = await prisma.thesis.findMany({
-      where: {
-        author_id: user.id,
-      },
-      select: {
-        thesis_id: true,
-        title: true,
-        category: true, // Categories: AI, ML, NLP
-        status: true, // For filtering under-review theses
-      },
-    })
-
-    // Get thesis IDs for filtering views and downloads
-    const userThesisIds = userTheses.map(thesis => thesis.thesis_id)
-
-    // 3. Total Views by Each Thesis (for user’s theses)
-    const totalViewsByUserThesis = await prisma.thesisView.groupBy({
+    // 1. Total Views by Each Thesis
+    const totalViewsByThesis = await prisma.thesisView.groupBy({
       by: ['thesis_id'],
-      where: {
-        thesis_id: { in: userThesisIds },
-      },
       _count: {
         thesis_id: true, // Count views for each thesis
       },
     })
 
-    const viewData = totalViewsByUserThesis.map(item => {
-      const thesis = userTheses.find(
+    const viewDetails = await prisma.thesis.findMany({
+      where: {
+        thesis_id: {
+          in: totalViewsByThesis.map(item => item.thesis_id),
+        },
+      },
+      select: {
+        thesis_id: true,
+        title: true,
+        category: true, // Assume category is AI, ML, or NLP
+      },
+    })
+
+    const viewData = totalViewsByThesis.map(item => {
+      const thesis = viewDetails.find(
         thesis => thesis.thesis_id === item.thesis_id
       )
       return {
@@ -51,40 +36,40 @@ export async function GET(request) {
       }
     })
 
-    // Total Views (cumulative) for user’s theses
-    const totalViews = totalViewsByUserThesis.reduce(
+    const totalViews = totalViewsByThesis.reduce(
       (acc, item) => acc + item._count.thesis_id,
       0
     )
 
     // Group views by category
-    const viewsByCategory = viewData.reduce(
-      (acc, item) => {
-        acc[item.category] = (acc[item.category] || 0) + item.views
-        acc['Total'] += item.views
-        return acc
-      },
-      { Total: 0, AI: 0, ML: 0, NLP: 0 }
-    )
+    const viewsByCategory = viewData.reduce((acc, item) => {
+      acc[item.category] = (acc[item.category] || 0) + item.views
+      return acc
+    }, {})
 
-    // Most Viewed Theses (Top 5)
-    const mostViewedTheses = viewData
-      .sort((a, b) => b.views - a.views)
-      .slice(0, 5)
-
-    // 4. Total Downloads by Each Thesis (for user’s theses)
-    const totalDownloadsByUserThesis = await prisma.thesisDownload.groupBy({
+    // 2. Total Downloads by Each Thesis
+    const totalDownloadsByThesis = await prisma.thesisDownload.groupBy({
       by: ['thesis_id'],
-      where: {
-        thesis_id: { in: userThesisIds },
-      },
       _count: {
         thesis_id: true, // Count downloads for each thesis
       },
     })
 
-    const downloadData = totalDownloadsByUserThesis.map(item => {
-      const thesis = userTheses.find(
+    const downloadDetails = await prisma.thesis.findMany({
+      where: {
+        thesis_id: {
+          in: totalDownloadsByThesis.map(item => item.thesis_id),
+        },
+      },
+      select: {
+        thesis_id: true,
+        title: true,
+        category: true, // Assume category is AI, ML, or NLP
+      },
+    })
+
+    const downloadData = totalDownloadsByThesis.map(item => {
+      const thesis = downloadDetails.find(
         thesis => thesis.thesis_id === item.thesis_id
       )
       return {
@@ -94,88 +79,80 @@ export async function GET(request) {
       }
     })
 
-    // Total Downloads (cumulative) for user’s theses
-    const totalDownloads = totalDownloadsByUserThesis.reduce(
+    const totalDownloads = totalDownloadsByThesis.reduce(
       (acc, item) => acc + item._count.thesis_id,
       0
     )
 
     // Group downloads by category
-    const downloadsByCategory = downloadData.reduce(
-      (acc, item) => {
-        acc[item.category] = (acc[item.category] || 0) + item.downloads
-        acc['Total'] += item.downloads
-        return acc
-      },
-      { Total: 0, AI: 0, ML: 0, NLP: 0 }
-    )
+    const downloadsByCategory = downloadData.reduce((acc, item) => {
+      acc[item.category] = (acc[item.category] || 0) + item.downloads
+      return acc
+    }, {})
 
-    // Most Downloaded Theses (Top 5)
-    const mostDownloadedTheses = downloadData
-      .sort((a, b) => b.downloads - a.downloads)
-      .slice(0, 5)
+    // 3. Total Users
+    const totalUsers = await prisma.user.count()
 
-    // 5. Total Theses submitted by the user
-    const totalUserTheses = userTheses.length
+    // 4. Total Theses
+    const totalTheses = await prisma.thesis.count()
 
-    // 6. Under-review Theses by the user
-    const underReviewUserTheses = userTheses.filter(
-      thesis => thesis.status === 'Pending'
-    ).length
-
-    // 7. Views and Downloads by Day (Last 7 Days)
-    const viewsByDay = await prisma.thesisView.groupBy({
-      by: ['date'],
+    // 5. Under-review Theses (status: 'Pending')
+    const underReviewTheses = await prisma.thesis.count({
       where: {
-        thesis_id: { in: userThesisIds },
+        status: 'Pending',
       },
+    })
+
+    // 6. Views and Downloads by Day (Last 7 Days)
+    const viewsByDay = await prisma.thesisView.groupBy({
+      by: ['created_at'],
       _count: {
-        date: true,
+        created_at: true,
       },
-      orderBy: { date: 'asc' },
+      orderBy: { created_at: 'asc' },
     })
 
     const downloadsByDay = await prisma.thesisDownload.groupBy({
-      by: ['date'],
-      where: {
-        thesis_id: { in: userThesisIds },
-      },
+      by: ['created_at'],
       _count: {
-        date: true,
+        created_at: true,
       },
-      orderBy: { date: 'asc' },
+      orderBy: { created_at: 'asc' },
     })
 
-    const viewsAndDownloadsByDay = viewsByDay.map(view => {
-      const downloads = downloadsByDay.find(
-        download => download.date === view.date
-      )
-      return {
-        date: view.date,
-        views: view._count.date,
-        downloads: downloads?._count.date || 0,
-      }
-    })
+    // Handle empty data cases
+    const viewsAndDownloadsByDay =
+      viewsByDay.length > 0
+        ? viewsByDay.map(view => {
+            const downloads = downloadsByDay.find(
+              download => download.created_at === view.created_at
+            )
+            return {
+              date: view.created_at,
+              views: view._count.created_at,
+              downloads: downloads?._count.created_at || 0,
+            }
+          })
+        : [] // Return empty array if no views
 
     // Return all statistics in the response
     return NextResponse.json(
       {
-        totalUserTheses,
-        underReviewUserTheses,
+        totalUsers,
+        totalTheses,
+        underReviewTheses,
         totalViews,
         totalDownloads,
         viewsByCategory,
         downloadsByCategory,
-        mostViewedTheses,
-        mostDownloadedTheses,
         viewsAndDownloadsByDay,
       },
       { status: 200 }
     )
   } catch (error) {
-    console.error('Error fetching user statistics:', error)
+    // console.error('Error fetching statistics:', error)
     return NextResponse.json(
-      { message: 'Error fetching user statistics', error: error.message },
+      { message: 'Error fetching statistics', error: error.message },
       { status: 500 }
     )
   }

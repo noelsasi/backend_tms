@@ -74,7 +74,7 @@ import { z } from 'zod' // Zod for validation
 const createThesisSchema = z.object({
   title: z.string().min(1),
   category: z.string().optional(),
-  keywords: z.array(z.string()).optional(),
+  keywords: z.string().optional(),
   abstract: z.string().optional(),
   document_url: z.string().optional(),
   status: z.enum(['pending', 'approved', 'rejected']).optional(),
@@ -122,7 +122,7 @@ export async function POST(req) {
         title: parsedBody.title,
         author_id: currentUser.id, // Link the thesis to the current authenticated user
         category: parsedBody.category || 'Other', // Default to "Other" if no category provided
-        keywords: parsedBody.keywords ? parsedBody.keywords.join(',') : '', // Store keywords as a CSV string
+        keywords: parsedBody.keywords || '', // Store keywords as a CSV string
         abstract: parsedBody.abstract || '', // Default to empty string if no abstract
         document_url: parsedBody.document_url || '', // Default to empty string if no document URL
         status: parsedBody.status || 'Pending', // Default to "Pending" if no status provided
@@ -135,7 +135,7 @@ export async function POST(req) {
       title: newThesis.title,
       author_name: currentUser.username, // Return the author's name (assumes username exists)
       category: newThesis.category,
-      keywords: newThesis.keywords.split(','), // Convert the CSV string back into an array
+      keywords: newThesis.keywords, // Already an array, no need to split
       abstract: newThesis.abstract,
       document_url: newThesis.document_url,
       status: newThesis.status,

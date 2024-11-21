@@ -42,29 +42,26 @@ export const GET = async req => {
         }
 
         return {
-          thesis_id: thesis.thesis_id.toString(), // Convert BigInt to string
+          thesis_id: thesis.thesis_id.toString(),
           title: thesis.title,
           abstract: thesis.abstract,
-          keywords: thesis.keywords, // JSON data
+          keywords: thesis.keywords.replace(/['"\\]/g, ''),
           status: thesis.status,
           document_url: thesis.document_url,
           upvotes,
           downvotes,
-          views_count: thesis.views.length, // Number of views
-          downloads_count: thesis.downloads.length, // Number of downloads
-          created_at: thesis.created_at.toISOString(), // Date in ISO string format
-          updated_at: thesis.updated_at.toISOString(), // Date in ISO string format
-          author_id: thesis.author_id.toString(), // Convert BigInt to string
+          views_count: thesis.views.length,
+          downloads_count: thesis.downloads.length,
+          created_at: thesis.created_at.toISOString(),
+          updated_at: thesis.updated_at.toISOString(),
+          author_id: thesis.author_id.toString(),
           category: thesis.category,
-          author_name, // Resolved author name
-          reviewer_id: thesis.reviewer_id?.toString() || null, // Convert BigInt to string or null
-          reviewer_name, // Resolved reviewer name
+          author_name,
+          reviewer_id: thesis.reviewer_id?.toString() || null,
+          reviewer_name,
         }
       })
     )
-
-    // Return the list of theses along with views, downloads, upvotes, and downvotes
-    return NextResponse.json(thesesResponse)
 
     // Return the list of theses along with views, downloads, upvotes, and downvotes
     return NextResponse.json(thesesResponse)
@@ -82,7 +79,7 @@ const createThesisSchema = z.object({
   title: z.string().min(1),
   author_id: z.string().min(1),
   category: z.string(),
-  keywords: z.array(z.string()),
+  keywords: z.string(),
   abstract: z.string(),
   status: z.enum(['pending', 'approved', 'rejected']),
   document_url: z.string().url().optional(),
@@ -108,7 +105,7 @@ export const POST = withRolePermission('CREATE_THESIS')(async req => {
       data: {
         title: parsedBody.title,
         category: parsedBody.category,
-        keywords: parsedBody.keywords, // Store keywords as JSON
+        keywords: parsedBody.keywords,
         abstract: parsedBody.abstract,
         document_url: parsedBody.document_url,
         status: parsedBody.status,
@@ -117,18 +114,17 @@ export const POST = withRolePermission('CREATE_THESIS')(async req => {
             id: BigInt(parsedBody.author_id),
           },
         },
-
       },
     })
 
-    // Step 4: Prepare the response object
+    // When sending the response, remove the JSON.parse since it's already an array
     const thesisResponse = {
       thesis_id: newThesis.thesis_id.toString(),
       title: newThesis.title,
       author_id: newThesis.author_id.toString(),
       document_url: newThesis.document_url,
       category: newThesis.category,
-      keywords: newThesis.keywords,
+      keywords: newThesis.keywords, // Already an array, no need to parse
       abstract: newThesis.abstract,
       status: newThesis.status,
       created_at: newThesis.created_at.toISOString(),

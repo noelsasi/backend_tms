@@ -38,6 +38,7 @@ async function up() {
           'DELETE_PEER_REVIEW',
           'VIEW_PROFILE',
           'UPDATE_PROFILE',
+          'DELETE_COMMENT',
         ],
       },
       {
@@ -57,6 +58,7 @@ async function up() {
           'MY_THESIS',
           'VIEW_PROFILE',
           'UPDATE_PROFILE',
+          'DELETE_COMMENT',
         ],
       },
       {
@@ -67,6 +69,7 @@ async function up() {
           'MY_THESIS',
           'VIEW_PROFILE',
           'UPDATE_PROFILE',
+          'DELETE_COMMENT',
         ],
       },
       { role_id: 4, permission: ['VIEW_THESIS'] },
@@ -147,7 +150,7 @@ async function up() {
       {
         title: 'Research on AI',
         abstract: 'This is a paper about Artificial Intelligence.',
-        keywords: ['AI', 'Machine Learning', 'Data Science'],
+        keywords: 'AI, Machine Learning, Data Science',
         document_url: 'https://pdfobject.com/pdf/sample.pdf',
         status: 'pending',
         category: 'AI',
@@ -157,7 +160,7 @@ async function up() {
       {
         title: 'Quantum Computing Advances',
         abstract: 'Exploring the latest in quantum computing.',
-        keywords: ['Quantum Computing', 'Qubits', 'Entanglement'],
+        keywords: 'Quantum Computing, Qubits, Entanglement',
         document_url: 'https://pdfobject.com/pdf/sample.pdf',
         status: 'approved',
         category: 'Quantum Computing',
@@ -167,7 +170,7 @@ async function up() {
       {
         title: 'Blockchain Technology',
         abstract: 'A comprehensive study on blockchain.',
-        keywords: ['Blockchain', 'Cryptocurrency', 'Decentralization'],
+        keywords: 'Blockchain, Cryptocurrency, Decentralization',
         document_url: 'https://pdfobject.com/pdf/sample.pdf',
         status: 'pending',
         category: 'Blockchain',
@@ -177,7 +180,7 @@ async function up() {
       {
         title: 'Renewable Energy Sources',
         abstract: 'Investigating renewable energy solutions.',
-        keywords: ['Renewable Energy', 'Solar', 'Wind'],
+        keywords: 'Renewable Energy, Solar, Wind',
         document_url: 'https://pdfobject.com/pdf/sample.pdf',
         status: 'pending',
         category: 'Renewable Energy',
@@ -187,7 +190,7 @@ async function up() {
       {
         title: 'Cybersecurity Threats',
         abstract: 'Understanding modern cybersecurity threats.',
-        keywords: ['Cybersecurity', 'Threats', 'Protection'],
+        keywords: 'Cybersecurity, Threats, Protection',
         document_url: 'https://pdfobject.com/pdf/sample.pdf',
         status: 'approved',
         category: 'Cybersecurity',
@@ -197,7 +200,7 @@ async function up() {
       {
         title: 'Artificial Neural Networks',
         abstract: 'Deep dive into neural networks.',
-        keywords: ['Neural Networks', 'Deep Learning', 'AI'],
+        keywords: 'Neural Networks, Deep Learning, AI',
         document_url: 'https://pdfobject.com/pdf/sample.pdf',
         status: 'pending',
         category: 'AI',
@@ -207,7 +210,7 @@ async function up() {
       {
         title: 'Internet of Things (IoT)',
         abstract: 'Exploring IoT applications and challenges.',
-        keywords: ['IoT', 'Smart Devices', 'Connectivity'],
+        keywords: 'IoT, Smart Devices, Connectivity',
         document_url: 'https://pdfobject.com/pdf/sample.pdf',
         status: 'pending',
         category: 'IoT',
@@ -217,7 +220,7 @@ async function up() {
       {
         title: 'Big Data Analytics',
         abstract: 'Analyzing big data trends and tools.',
-        keywords: ['Big Data', 'Analytics', 'Data Science'],
+        keywords: 'Big Data, Analytics, Data Science',
         document_url: 'https://pdfobject.com/pdf/sample.pdf',
         status: 'approved',
         category: 'Big Data',
@@ -227,7 +230,7 @@ async function up() {
       {
         title: 'Augmented Reality',
         abstract: 'The future of augmented reality technology.',
-        keywords: ['Augmented Reality', 'AR', 'Technology'],
+        keywords: 'Augmented Reality, AR, Technology',
         document_url: 'https://pdfobject.com/pdf/sample.pdf',
         status: 'pending',
         category: 'AR',
@@ -237,7 +240,7 @@ async function up() {
       {
         title: '5G Networks',
         abstract: 'Impact of 5G networks on communication.',
-        keywords: ['5G', 'Networks', 'Communication'],
+        keywords: '5G, Networks, Communication',
         document_url: 'https://pdfobject.com/pdf/sample.pdf',
         status: 'approved',
         category: '5G',
