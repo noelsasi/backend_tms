@@ -1,18 +1,17 @@
 import { NextResponse } from 'next/server'
 import prisma from '../../../lib/db' // Prisma client instance
 
-// API endpoint to get statistics and graph values
 export async function GET() {
   try {
     // 1. Total Views by Each Thesis
     const totalViewsByThesis = await prisma.thesisView.groupBy({
       by: ['thesis_id'],
       _count: {
-        thesis_id: true, // Count views for each thesis
+        thesis_id: true,
       },
     })
 
-    const viewDetails = await prisma.thesis.findMany({
+    const thesisDetails = await prisma.thesis.findMany({
       where: {
         thesis_id: {
           in: totalViewsByThesis.map(item => item.thesis_id),
@@ -21,12 +20,12 @@ export async function GET() {
       select: {
         thesis_id: true,
         title: true,
-        category: true, // Assume category is AI, ML, or NLP
+        category: true, // Assume categories: AI, ML, NLP
       },
     })
 
     const viewData = totalViewsByThesis.map(item => {
-      const thesis = viewDetails.find(
+      const thesis = thesisDetails.find(
         thesis => thesis.thesis_id === item.thesis_id
       )
       return {
@@ -41,35 +40,26 @@ export async function GET() {
       0
     )
 
-    // Group views by category
-    const viewsByCategory = viewData.reduce((acc, item) => {
-      acc[item.category] = (acc[item.category] || 0) + item.views
-      return acc
-    }, {})
+    // Group views by category (for donut chart)
+    const viewsByCategory = viewData.reduce(
+      (acc, item) => {
+        acc[item.category] = (acc[item.category] || 0) + item.views
+        acc['Total'] += item.views
+        return acc
+      },
+      { Total: 0, AI: 0, ML: 0, NLP: 0 }
+    )
 
     // 2. Total Downloads by Each Thesis
     const totalDownloadsByThesis = await prisma.thesisDownload.groupBy({
       by: ['thesis_id'],
       _count: {
-        thesis_id: true, // Count downloads for each thesis
-      },
-    })
-
-    const downloadDetails = await prisma.thesis.findMany({
-      where: {
-        thesis_id: {
-          in: totalDownloadsByThesis.map(item => item.thesis_id),
-        },
-      },
-      select: {
         thesis_id: true,
-        title: true,
-        category: true, // Assume category is AI, ML, or NLP
       },
     })
 
     const downloadData = totalDownloadsByThesis.map(item => {
-      const thesis = downloadDetails.find(
+      const thesis = thesisDetails.find(
         thesis => thesis.thesis_id === item.thesis_id
       )
       return {
@@ -84,11 +74,15 @@ export async function GET() {
       0
     )
 
-    // Group downloads by category
-    const downloadsByCategory = downloadData.reduce((acc, item) => {
-      acc[item.category] = (acc[item.category] || 0) + item.downloads
-      return acc
-    }, {})
+    // Group downloads by category (for donut chart)
+    const downloadsByCategory = downloadData.reduce(
+      (acc, item) => {
+        acc[item.category] = (acc[item.category] || 0) + item.downloads
+        acc['Total'] += item.downloads
+        return acc
+      },
+      { Total: 0, AI: 0, ML: 0, NLP: 0 }
+    )
 
     // 3. Total Users
     const totalUsers = await prisma.user.count()
@@ -103,45 +97,49 @@ export async function GET() {
       },
     })
 
-    // 6. Views and Downloads by Day (Last 7 Days)
+    // 6. Views and Downloads by Day of Week
     const viewsByDay = await prisma.thesisView.groupBy({
-      by: ['date'],
+      by: ['dayOfWeek'], // Assuming dayOfWeek field exists (e.g., "Monday", "Tuesday")
       _count: {
-        date: true,
+        dayOfWeek: true,
       },
-      orderBy: { date: 'asc' },
     })
 
     const downloadsByDay = await prisma.thesisDownload.groupBy({
-      by: ['date'],
+      by: ['dayOfWeek'], // Assuming dayOfWeek field exists
       _count: {
-        date: true,
+        dayOfWeek: true,
       },
-      orderBy: { date: 'asc' },
     })
 
-    const viewsAndDownloadsByDay = viewsByDay.map(view => {
-      const downloads = downloadsByDay.find(
-        download => download.date === view.date
-      )
-      return {
-        date: view.date,
-        views: view._count.date,
-        downloads: downloads?._count.date || 0,
-      }
+    const weeklyData = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ].map(day => {
+      const views =
+        viewsByDay.find(item => item.dayOfWeek === day)?._count.dayOfWeek || 0
+      const downloads =
+        downloadsByDay.find(item => item.dayOfWeek === day)?._count.dayOfWeek ||
+        0
+      return { day, views, downloads }
     })
 
-    // Return all statistics in the response
+    // Response JSON structure
     return NextResponse.json(
       {
+        totalViews,
+        totalDownloads,
         totalUsers,
         totalTheses,
         underReviewTheses,
-        totalViews,
-        totalDownloads,
         viewsByCategory,
         downloadsByCategory,
-        viewsAndDownloadsByDay,
+        weeklyData, // Views and downloads per day of week
       },
       { status: 200 }
     )
