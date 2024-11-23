@@ -23,19 +23,44 @@ export async function GET(req) {
     // Validate parameters using Zod
     const validatedParams = searchParamsSchema.parse(params)
 
-    // Build where conditions only if searchText is provided
     const whereConditions = validatedParams.searchText
       ? {
           OR: [
-            { title: { contains: validatedParams.searchText } },
-            { category: { contains: validatedParams.searchText } },
-            { keywords: { array_contains: [validatedParams.searchText] } },
+            {
+              title: {
+                contains: validatedParams.searchText,
+              },
+            },
+
+            {
+              category: {
+                contains: validatedParams.searchText,
+              },
+            },
+
+            {
+              keywords: {
+                contains: validatedParams.searchText,
+              },
+            },
             {
               author: {
                 OR: [
-                  { username: { contains: validatedParams.searchText } },
-                  { firstname: { contains: validatedParams.searchText } },
-                  { lastname: { contains: validatedParams.searchText } },
+                  {
+                    username: {
+                      contains: validatedParams.searchText,
+                    },
+                  },
+                  {
+                    firstname: {
+                      contains: validatedParams.searchText,
+                    },
+                  },
+                  {
+                    lastname: {
+                      contains: validatedParams.searchText,
+                    },
+                  },
                 ],
               },
             },
@@ -76,12 +101,11 @@ export async function GET(req) {
         ThesisVote: true,
       },
     })
-
+    console.log(theses)
     // Get total count for pagination
     const totalCount = await prisma.thesis.count({
       where: whereConditions,
     })
-
     // Format the response using the same pattern as home route
     const formattedTheses = theses.map(thesis => ({
       thesis_id: thesis.thesis_id.toString(),
@@ -113,7 +137,6 @@ export async function GET(req) {
           }
         : null,
     }))
-
     return NextResponse.json({
       theses: formattedTheses,
       pagination: {

@@ -103,37 +103,96 @@ export async function GET() {
       },
     })
 
+    // // 6. Views and Downloads by Day (Last 7 Days)
+    // const viewsByDay = await prisma.thesisView.groupBy({
+    //   by: ['created_at'],
+    //   _count: {
+    //     created_at: true,
+    //   },
+    //   orderBy: { created_at: 'asc' },
+    // })
+
+    // const downloadsByDay = await prisma.thesisDownload.groupBy({
+    //   by: ['created_at'],
+    //   _count: {
+    //     created_at: true,
+    //   },
+    //   orderBy: { created_at: 'asc' },
+    // })
+
+    // // Handle empty data cases
+    // const viewsAndDownloadsByDay = viewsByDay.length > 0
+    //   ? viewsByDay.map(view => {
+    //       const downloads = downloadsByDay.find(
+    //         download => download.created_at === view.created_at
+    //       )
+    //       return {
+    //         date: view.created_at,
+    //         views: view._count.created_at,
+    //         downloads: downloads?._count.created_at || 0,
+    //       }
+    //     })
+    //   : [] // Return empty array if no views
+
+    // second view
     // 6. Views and Downloads by Day (Last 7 Days)
-    const viewsByDay = await prisma.thesisView.groupBy({
-      by: ['created_at'],
-      _count: {
-        created_at: true,
-      },
-      orderBy: { created_at: 'asc' },
+    const viewsByDay = await prisma.$queryRaw`
+    SELECT 
+      DATE(created_at) AS date,  
+      COUNT(*) AS views     
+    FROM 
+      thesisView
+    GROUP BY 
+      date
+    ORDER BY 
+      date ASC
+  `
+
+    // Normalize the result and convert 'downloads' to an integer
+    const normalizedViewsByDay = viewsByDay.map(download => ({
+      date: download.date.toISOString().split('T')[0], // 'date' is already in 'YYYY-MM-DD' format
+      views: Number(download.views),
+    }))
+
+    const downloadsByDay = await prisma.$queryRaw`
+    SELECT 
+      DATE(created_at) AS date,  
+      COUNT(*) AS downloads     
+    FROM 
+      thesisDownload
+    GROUP BY 
+      date
+    ORDER BY 
+      date ASC
+  `
+
+    // Normalize the result and convert 'downloads' to an integer
+    const normalizedDownloadsByDay = downloadsByDay.map(download => ({
+      date: download.date.toISOString().split('T')[0], // 'date' is already in 'YYYY-MM-DD' format
+      downloads: Number(download.downloads),
+    }))
+
+    // Create a union of all unique dates from views and downloads
+    const allDates = [
+      ...new Set([
+        ...normalizedViewsByDay.map(item => item.date),
+        ...normalizedDownloadsByDay.map(item => item.date),
+      ]),
+    ]
+
+    // Merge views and downloads by day using the union of dates
+    const viewsAndDownloadsByDay = allDates.map(date => {
+      const views = normalizedViewsByDay.find(view => view.date === date)
+      const downloads = normalizedDownloadsByDay.find(
+        download => download.date === date
+      )
+
+      return {
+        date: date,
+        views: views ? views.views : 0, // Use 0 if no views for this date
+        downloads: downloads ? downloads.downloads : 0, // Use 0 if no downloads for this date
+      }
     })
-
-    const downloadsByDay = await prisma.thesisDownload.groupBy({
-      by: ['created_at'],
-      _count: {
-        created_at: true,
-      },
-      orderBy: { created_at: 'asc' },
-    })
-
-    // Handle empty data cases
-    const viewsAndDownloadsByDay = viewsByDay.length > 0 
-      ? viewsByDay.map(view => {
-          const downloads = downloadsByDay.find(
-            download => download.created_at === view.created_at
-          )
-          return {
-            date: view.created_at,
-            views: view._count.created_at,
-            downloads: downloads?._count.created_at || 0,
-          }
-        })
-      : [] // Return empty array if no views
-
     // Return all statistics in the response
     return NextResponse.json(
       {

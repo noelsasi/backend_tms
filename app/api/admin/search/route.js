@@ -267,74 +267,64 @@
 //     );
 //   }
 // });
-import { withRolePermission } from "@/app/lib/middleware";
-import { NextResponse } from "next/server";
-import prisma from "@/app/lib/db"; // Import Prisma client
-import { z } from "zod"; // Zod for validation
+
+// actuall
+import { withRolePermission } from '@/app/lib/middleware'
+import { NextResponse } from 'next/server'
+import prisma from '@/app/lib/db' // Import Prisma client
+import { z } from 'zod' // Zod for validation
 
 // Schema to validate the incoming request body for searching theses
 const searchThesisSchema = z.object({
-  title: z.string().optional(),
+  search: z.string().optional(),
   author_name: z.string().optional(),
   category: z.string().optional(),
-  keywords: z.array(z.string()).optional(),
+  keywords: z.string().optional(),
   start_date: z.string().optional(),
   end_date: z.string().optional(),
-  status: z.enum(["pending", "approved", "rejected"]).optional(),
-});
+  status: z.enum(['pending', 'approved', 'rejected']).optional(),
+})
 
-export const POST = withRolePermission("VIEW_THESIS")(async (req) => {
+export const POST = withRolePermission('VIEW_THESIS')(async req => {
   try {
     // Step 1: Parse and validate the request body
-    const body = await req.json();
-    const parsedBody = searchThesisSchema.parse(body);
+    const body = await req.json()
+    const parsedBody = searchThesisSchema.parse(body)
 
     // Step 2: Extract the search fields from the parsed body
     const {
-      title,
+      search,
       author_name,
       category,
       keywords,
       start_date,
       end_date,
       status,
-    } = parsedBody;
+    } = parsedBody
 
     // Step 3: Parse and format start_date and end_date
     const startDate = start_date
-      ? new Date(start_date + "T00:00:00Z")
-      : undefined;
-    const endDate = end_date ? new Date(end_date + "T23:59:59Z") : undefined;
+      ? new Date(start_date + 'T00:00:00Z')
+      : undefined
+    const endDate = end_date ? new Date(end_date + 'T23:59:59Z') : undefined
 
     // Step 4: Build the search criteria
     const whereConditions = {
       AND: [
-        title ? { title: { contains: title } } : undefined,
+        search ? { title: { contains: search } } : undefined,
         category ? { category: { contains: category } } : undefined,
-        keywords && keywords.length > 0
+        keywords
           ? {
               keywords: {
-                array_contains: keywords, // Match the keywords array with the input list
+                contains: keywords, // Join keywords into a single string for matching
               },
             }
           : undefined,
-        startDate && endDate
+        startDate || endDate
           ? {
               created_at: {
-                gte: startDate,
-                lte: endDate,
-              },
-            }
-          : startDate
-          ? {
-              created_at: {
-                gte: startDate,
-              },
-            }
-          : endDate
-          ? {
-              created_at: {
-                lte: endDate,
+                gte: startDate || undefined, // If startDate is defined, use it, else leave it undefined
+                lte: endDate || undefined, // If endDate is defined, use it, else leave it undefined
               },
             }
           : undefined,
@@ -342,15 +332,48 @@ export const POST = withRolePermission("VIEW_THESIS")(async (req) => {
         author_name
           ? {
               author: {
-                username: {
-                  contains: author_name,
-                  //   mode: "insensitive", // Make author search case insensitive
-                },
+                AND: (() => {
+                  const nameParts = author_name
+                    .split(' ')
+                    .map(part => part.trim())
+
+                  if (nameParts.length === 1) {
+                    // If there's only one part (e.g., "John"), search in both firstname and lastname
+                    return [
+                      {
+                        firstname: {
+                          contains: nameParts[0],
+                        },
+                      },
+                      {
+                        lastname: {
+                          contains: nameParts[0],
+                        },
+                      },
+                    ]
+                  } else if (nameParts.length === 2) {
+                    // If there are two parts (e.g., "John Doe"), search in firstname and lastname
+                    return [
+                      {
+                        firstname: {
+                          contains: nameParts[0], // Match first part in firstname
+                        },
+                      },
+                      {
+                        lastname: {
+                          contains: nameParts[1], // Match second part in lastname
+                        },
+                      },
+                    ]
+                  } else {
+                    return []
+                  }
+                })(),
               },
             }
           : undefined,
-      ].filter(Boolean), // Filter out any undefined values
-    };
+      ].filter(Boolean), // Remove undefined values from the conditions array
+    }
 
     // Step 5: Perform the query to search for theses
     // const theses = await prisma.thesis.findMany({
@@ -363,34 +386,36 @@ export const POST = withRolePermission("VIEW_THESIS")(async (req) => {
     //     document_url: true,
     //   },
     // });
+    console.log(whereConditions)
     const theses = await prisma.thesis.findMany({
-        where: whereConditions,
-        select: {
-          thesis_id: true,
-          title: true,
-          category: true,
-          keywords: true,
-          abstract: true,
-          status: true,
-          created_at: true,
-          updated_at: true,
-          author: {
-            select: {
-              username: true,
-            },
+      where: whereConditions,
+      select: {
+        thesis_id: true,
+        title: true,
+        category: true,
+        keywords: true,
+        abstract: true,
+        status: true,
+        created_at: true,
+        updated_at: true,
+        author: {
+          select: {
+            username: true,
           },
-          reviewer: {
-            select: {
-              username: true,
-            },
-          },
-          views: true,
-          downloads: true,
-          document_url: true, // Directly select document_url here
         },
-      });
+        reviewer: {
+          select: {
+            username: true,
+          },
+        },
+        views: true,
+        downloads: true,
+        document_url: true, // Directly select document_url here
+      },
+    })
+    console.log(theses)
     // Step 6: Map over the results to convert BigInt to string
-    const thesesResponse = theses.map((thesis) => ({
+    const thesesResponse = theses.map(thesis => ({
       thesis_id: thesis.thesis_id.toString(), // Convert BigInt to string
       title: thesis.title,
       author_name: thesis.author.username,
@@ -405,24 +430,24 @@ export const POST = withRolePermission("VIEW_THESIS")(async (req) => {
       downloads: thesis.downloads.length,
       reviewer_name: thesis.reviewer ? thesis.reviewer.username : null,
       document_url: thesis.document_url,
-    }));
+    }))
 
     // Step 7: Return the search results
-    return NextResponse.json({ theses: thesesResponse });
+    return NextResponse.json({ theses: thesesResponse })
   } catch (error) {
-    console.error("Error searching theses:", error.message || error);
+    console.error('Error searching theses:', error.message || error)
 
     // Handle errors (Zod validation errors or any internal errors)
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { message: "Validation failed", errors: error.errors },
+        { message: 'Validation failed', errors: error.errors },
         { status: 400 }
-      );
+      )
     }
 
     return NextResponse.json(
-      { message: "Internal Server Error", error: error.message || error },
+      { message: 'Internal Server Error', error: error.message || error },
       { status: 500 }
-    );
+    )
   }
-});
+})

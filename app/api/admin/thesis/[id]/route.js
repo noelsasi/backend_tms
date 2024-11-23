@@ -113,29 +113,112 @@ export const PUT = withRolePermission('MODIFY_THESIS')(
 
 // write delete method
 
+// export const DELETE = withRolePermission('DELETE_THESIS')(
+//   async (req, { params }) => {
+//     const { id } = await params
+
+//     try {
+//       const thesis = await prisma.thesis.findUnique({
+//         where: { thesis_id: BigInt(id) },
+//       })
+
+//       if (!thesis) {
+//         return NextResponse.json(
+//           { message: 'Thesis not found' },
+//           { status: 404 }
+//         )
+//       }
+
+//       await prisma.thesis.delete({
+//         where: { thesis_id: BigInt(id) },
+//       })
+
+//       return NextResponse.json({ message: 'Thesis deleted successfully' })
+//     } catch (error) {
+//       console.error('Error deleting thesis:', error.message || error)
+//       return NextResponse.json(
+//         { message: 'Internal Server Error', error: error.message || error },
+//         { status: 500 }
+//       )
+//     }
+//   }
+// )
 export const DELETE = withRolePermission('DELETE_THESIS')(
   async (req, { params }) => {
-    const { id } = await params
-
     try {
+      const { id } = await params
+      const thesisId = id
+      console.log(thesisId)
+      // Check if `thesis_id` is provided
+      if (!thesisId) {
+        return NextResponse.json(
+          { message: 'Thesis ID is required' },
+          { status: 400 }
+        )
+      }
+
+      // Step 1: Fetch the thesis to ensure it exists
       const thesis = await prisma.thesis.findUnique({
-        where: { thesis_id: BigInt(id) },
+        where: { thesis_id: thesisId },
       })
 
       if (!thesis) {
         return NextResponse.json(
-          { message: 'Thesis not found' },
+          { message: `Thesis with ID ${thesisId} not found` },
           { status: 404 }
         )
       }
 
-      await prisma.thesis.delete({
-        where: { thesis_id: BigInt(id) },
+      // Fetch the current user for logging the action
+      const currentUser = await getUserFromSession(req)
+
+      // Step 2: Log the action (before deletion)
+      await prisma.history.create({
+        data: {
+          user_id: currentUser.id,
+          action: 'Deleted Thesis',
+          description: `Thesis titled "${thesis.title}" deleted by ${currentUser.email}`,
+        },
       })
 
-      return NextResponse.json({ message: 'Thesis deleted successfully' })
+      // Step 3: Manually delete the related records in stages
+      // Delete ThesisViews related to the Thesis
+      await prisma.thesisView.deleteMany({
+        where: { thesis_id: thesisId },
+      })
+
+      // Delete ThesisDownloads related to the Thesis
+      await prisma.thesisDownload.deleteMany({
+        where: { thesis_id: thesisId },
+      })
+
+      // Delete ThesisComments related to the Thesis
+      await prisma.thesisComment.deleteMany({
+        where: { thesis_id: thesisId },
+      })
+
+      // Delete PeerMessages related to the Thesis
+      await prisma.peerMessage.deleteMany({
+        where: { thesis_id: thesisId },
+      })
+
+      // Optional: You may also want to delete ThesisVotes if they exist
+      await prisma.thesisVote.deleteMany({
+        where: { thesis_id: thesisId },
+      })
+
+      // Step 4: Finally delete the Thesis itself
+      await prisma.thesis.delete({
+        where: { thesis_id: thesisId },
+      })
+
+      // Step 5: Return a success response
+      return NextResponse.json({
+        message: `Thesis with ID ${thesisId} deleted successfully`,
+      })
     } catch (error) {
-      console.error('Error deleting thesis:', error.message || error)
+      console.error('Error deleting thesis:', error)
+
       return NextResponse.json(
         { message: 'Internal Server Error', error: error.message || error },
         { status: 500 }
