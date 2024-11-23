@@ -1,6 +1,6 @@
 // pages/api/messages/last.js
 
-import prisma from '../../../lib/db' // Assuming Prisma is set up
+import prisma from '../../../lib/db'
 import { NextResponse } from 'next/server'
 import { getUserFromSession } from '../../../lib/currentSesion'
 
@@ -14,45 +14,92 @@ export async function GET(req) {
       )
     }
 
-    const conversations = await prisma.$queryRaw`
-      SELECT 
-        m.*,
-        u.username,
-        u.profilePic
-      FROM Message m
-      INNER JOIN (
-        SELECT 
-          CASE 
-            WHEN sender_id = ${currentUser.id} THEN receiver_id
-            ELSE sender_id
-          END as other_user_id,
-          MAX(created_at) as latest_message
-        FROM Message
-        WHERE sender_id = ${currentUser.id} OR receiver_id = ${currentUser.id}
-        GROUP BY other_user_id
-      ) latest ON (
-        (m.sender_id = ${currentUser.id} AND m.receiver_id = latest.other_user_id) OR
-        (m.receiver_id = ${currentUser.id} AND m.sender_id = latest.other_user_id)
-      ) AND m.created_at = latest.latest_message
-      INNER JOIN User u ON u.id = latest.other_user_id
-      ORDER BY m.created_at DESC
-    `
+    const conversations = await prisma.message.findMany({
+      where: {
+        OR: [{ sender_id: currentUser.id }, { receiver_id: currentUser.id }],
+      },
+      include: {
+        sender: {
+          select: {
+            firstname: true,
+            profilePic: true,
+          },
+        },
+        receiver: {
+          select: {
+            firstname: true,
+            profilePic: true,
+          },
+        },
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+    })
 
-    const formattedConversations = conversations.map(conv => ({
-      id: conv.id.toString(),
-      other_user_id:
-        conv.sender_id === currentUser.id
-          ? conv.receiver_id.toString()
-          : conv.sender_id.toString(),
-      username: conv.username,
-      profilePic: conv.profilePic,
-      last_message: conv.content,
-      last_message_time: conv.created_at.toISOString(),
-    }))
+    let uniqueSenders = [...new Set(conversations.map(conv => conv.sender_id))]
+    let uniqueReceivers = [
+      ...new Set(conversations.map(conv => conv.receiver_id)),
+    ]
 
-    return NextResponse.json(formattedConversations)
+    // remove the current user from the uniqueSenders and uniqueReceivers
+    uniqueSenders = uniqueSenders.filter(id => id != currentUser.id)
+    uniqueReceivers = uniqueReceivers.filter(id => id != currentUser.id)
+
+    const uniqueUsers = [...new Set([...uniqueSenders, ...uniqueReceivers])]
+
+    const messages = []
+    for (const user of uniqueUsers) {
+      const lastMessage = conversations.find(
+        conv =>
+          (conv.sender_id == user && conv.receiver_id == currentUser.id) ||
+          (conv.receiver_id == user && conv.sender_id == currentUser.id)
+      )
+      const unreadMessages = conversations.filter(
+        conv =>
+          conv.receiver_id == currentUser.id &&
+          !conv.read &&
+          conv.sender_id == user
+      )
+      const lastMessageReceiver = await prisma.user.findFirst({
+        where: {
+          id: user.toString(),
+        },
+        select: {
+          firstname: true,
+          profilePic: true,
+        },
+      })
+
+      messages.push({
+        ...lastMessage,
+        sender_id: currentUser.id.toString(),
+        receiver_id: user.toString(),
+        id: lastMessage.id.toString(),
+        unreadMessages: unreadMessages.length,
+        receiver: lastMessageReceiver,
+        sender: {
+          firstname: currentUser.firstname,
+          profilePic: currentUser.profilePic,
+        },
+      })
+    }
+
+    return NextResponse.json(messages)
   } catch (error) {
     console.error('Error fetching conversations:', error)
+
+    if (error.code === 'P2002') {
+      return NextResponse.json(
+        { message: 'Database constraint violation' },
+        { status: 409 }
+      )
+    }
+
+    if (error.code === 'P2025') {
+      return NextResponse.json({ message: 'Record not found' }, { status: 404 })
+    }
+
     return NextResponse.json(
       { message: 'Error fetching conversations', error: error.message },
       { status: 500 }
